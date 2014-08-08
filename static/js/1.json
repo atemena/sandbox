@@ -1,0 +1,38 @@
+image1 = {
+	"name": "Some shapes.",
+	"rect": {
+		"width": 500,
+		"height": 500
+	},
+	"color": "rgba(0,0,0,1)",
+	"subgroups": [
+		{
+			"rect": {
+				"x": 50,
+				"y": 200,
+				"height": 100,
+				"width": 100
+			},
+			"curve": -1,
+			"color": "rgba(255,255,0,1)",
+			"stroke": {
+				"color": "rgba(255,255,255,.5)",
+				"width": "5"
+			}
+		},
+		{
+			"rect": {
+				"x": 100,
+				"y": 250,
+				"height": 200,
+				"width": 200
+			},
+			"curve": 5,
+			"color": "rgba(255,255,255,.5)",
+			"stroke": {
+				"color": "rgba(255,255,255,1)",
+				"width": "1"
+			}
+		}
+	]
+};

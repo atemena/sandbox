@@ -1,0 +1,17 @@
+class Word():
+	def getWord():
+		#get word from a file
+
+	def mask(word):
+		#mask word
+
+	def reveal(last_revealed_word, char_clicked, final_word):
+		#check if char clicked is in final word
+
+	def chars_left(revealed_word):
+		#check how many characters are chars_left
+
+
+class Game():
+	def checkForWin():
+	def checkGuess():

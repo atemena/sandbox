@@ -1,0 +1,93 @@
+a, a:visited {
+	font-weight: bold;
+	color: #333333;
+}
+
+a:hover {
+	color: rgb(20, 146, 175);
+	text-decoration: none;
+}
+
+footer {
+	line-height: 350%;
+	border-top: 1px solid #cccccc;
+	color: white;
+}
+
+footer a, footer a:visited {
+	padding-right:15px;
+	color: #999999;
+	font-weight: normal;
+}
+
+.dropdown-menu li a:hover {
+	background-image: none;
+	background-color: rgb(20, 146, 175);
+}
+
+body {
+	background-color: #222222;
+}
+
+div#block-header {
+	background: url('/img/bg.jpg') no-repeat;
+	height: 500px;
+}
+
+div#block-subheader {
+	height: 50px;
+	padding-top: 26px;
+	padding-right: 120px;
+	text-align: center;
+	border-top: 1px solid #cccccc;
+	border-bottom: 1px solid #cccccc;
+}
+
+div#block-subfooter {
+	height: 30px;
+	padding-top: 10px;
+	padding-right: 120px;
+	text-align: center;
+	border-top: 1px solid #cccccc;
+}
+
+div#block-content {
+	background-color: white;
+	padding-bottom: 50px;
+}
+
+div.block-subhero {
+	padding: 5px;
+	height: 400px;
+	width: 250px;
+	background-color: white;
+	text-align: center;
+	position: relative;
+	-webkit-border-radius: 3px;
+	-moz-border-radius: 3px;
+	border-radius: 3px;
+	-webkit-box-shadow: 1px 1px 5px #888888;
+	-moz-box-shadow: 1px 1px 5px #888888;
+	box-shadow: 1px 1px 5px #888888;
+}
+
+div.block-subhero p {
+	text-align: justify;
+	font-size: 12px;
+}
+
+div.block-subhero img {
+	float: left;
+	border: 1px solid #cccccc;
+	margin-right: 5px;
+}
+
+.button-subhero {
+	width: 100px;
+}
+
+.button-subhero-bottom {
+	position: absolute;
+	bottom: 10px;
+	left: 73px;
+}

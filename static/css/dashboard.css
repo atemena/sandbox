@@ -1,0 +1,32 @@
+.sidebar a > [class^="icon-"],
+.sidebar a > [class*=" icon-"],
+.sidebar a:hover > [class^="icon-"],
+.sidebar a:hover > [class*=" icon-"] {
+	color: #333333;
+}
+#in-sub-nav {
+	background-color: #2f526f;
+}
+/* icon-white doesn't work with font awesome, need to change the text color instead. */
+.top i,
+.stat-list i { 
+	color: #FFFFFF;
+}
+a:hover .panel,
+.selected {
+	-moz-box-shadow:    0px 0px 8px 2px #2f526f;
+	-webkit-box-shadow: 0px 0px 8px 2px #2f526f;
+	box-shadow:         0px 0px 8px 2px #2f526f;
+}
+
+/* Form errors output as a ul with this class */
+.errorlist {
+	font-weight: bold;
+	color: red;
+	list-style: none;
+	display: inline;
+}
+
+hr {
+	clear: both;
+}

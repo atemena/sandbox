@@ -1,0 +1,185 @@
+<html>
+	<head>
+		<script type="text/javascript" src="pinterest.js"></script>
+		<script type="text/javascript" src="jquery.js"></script>
+		<script src="http://d3lp1msu2r81bx.cloudfront.net/kjs/js/lib/kinetic-v4.6.0.min.js"></script>
+		<link href='http://fonts.googleapis.com/css?family=Hanalei' rel='stylesheet' type='text/css'>
+		<script src="http://crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/hmac-sha1.js"></script>
+		<script src="http://crypto-js.googlecode.com/svn/tags/3.1.2/build/components/enc-base64-min.js"></script>
+		<script type="text/javascript" src="oauth-1.0a-master/oauth-1.0a.js"></script>
+	</head>
+	<body>
+	<h1> Backgrounds </h1>
+	<img onclick='sendToCanvas(this.src)' src='example.png' width='80px'/>
+	<img onclick='sendToCanvas(this.src)' src='test.jpg' width='80px'/> 
+	<img onclick='sendToCanvas(this.src)' src='background.jpg' width='80px'/> 
+	<h2> Stickers</h2>
+	<img onclick='addSticker(this.src)' src='icon.png' width='80px'/>
+	<img onclick='addSticker(this.src)' src='biggericon.png' width='80px'/> 
+	<img onclick='addSticker(this.src)' src='poster.jpg' width='80px'/> 
+	<img onclick='addSticker(this.src)' src='title.png' width='80px'/>
+	<h2>Add text</h2>
+	Text to add: <textarea type="text" id="textbox_id">hello</textarea><br>
+	<button onclick="addText()"> Add Text</button>
+	<button onClick="saveViaAJAX();" id="save_image"> save </button>
+	<button onclick="postToTumblr()"> Post to Tumblr</button>
+	<div style="font-family: 'Hanalei', cursive;"></div>
+
+	<a  id="saveimg2Pinterest"><img src="//assets.pinterest.com/images/pidgets/pin_it_button.png" /></a><br/>
+	<div id="kineticCanvas" style="position: relative;">
+		<canvas id="backgroundCanvas" width="800" height="800" style="border:1px solid #000000; position: absolute; left: 200; top: 0; z-index: 0;"></canvas>
+		<canvas id="myCanvas" width="800" height="800" style="border:1px solid #000000; position: absolute; left: 200; top: 0; z-index: 1;"></canvas>
+		<canvas id="endCanvas" width="800" height="800" style="border:1px solid #000000; position: absolute; left: 200; top: 0; z-index: 1;"></canvas>
+	</div>
+</body>
+	<script>
+	
+	var main_canvas=document.getElementById("myCanvas");
+	var background_canvas=document.getElementById("backgroundCanvas");
+	var final_canvas=document.getElementById("endCanvas");
+	var main_context=main_canvas.getContext("2d");
+	var background_context=background_canvas.getContext("2d");
+	var final_context=final_canvas.getContext("2d");
+	var button = document.getElementById("save_image");
+	var pin_it = document.getElementById("pin_it_button");
+	var imgURL = ""
+	var background = new Image();
+
+	var oauth = new OAuth({
+	    consumer: {
+	        public: 'zLZDEzKfKaxtlMeFnG1dXrZ4jlo1pFZuDZRLQGR7izKBHB7DeJ',
+	        secret: 'c05OzghD6IBkKtD0Vekg2ucAK0q5dwgafhzbzlRs2kf4tn0sCq'
+	    },
+	    signature_method: 'HMAC-SHA1'
+	});
+	var request_data = {
+	    url: 'http://www.tumblr.com/oauth/request_token',
+	    method: 'POST',
+	    data: {
+	    	oauth_callback:'www.facebook.com'
+	    }
+	};
+	var token = {
+	    public: '',
+	    secret: ''
+	};
+	var callback_success = false;
+		
+	function sendToCanvas(clicked_src) {
+	 background_context.clearRect(0, 0, background_canvas.width, background_canvas.height);
+		background.src = clicked_src;
+		background.onload = function(){
+			var width = background_canvas.width;
+			var height =  this.height * (background_canvas.width/this.width);
+		    background_context.drawImage(background,((background_canvas.width/2)-(width/2)),((background_canvas.height/2)-(height/2)), width, height);
+		}
+	}
+
+
+	
+
+	function addSticker(clicked_sticker){
+		var image = new Image();
+		image.src = clicked_sticker;
+		image.onload = function(){
+			main_context.drawImage(image,0,0);
+		}
+	}
+
+	function addText(){
+		var textToAdd = document.getElementById('textbox_id').value
+		main_context.fillStyle = "blue";
+  		main_context.font = "bold 16px 'Hanalei'";
+  		main_context.fillText(textToAdd, 100, 100);
+  		
+	}
+
+	
+
+	function dataURItoBlob(dataURI) {
+	    var binary = atob(dataURI.split(',')[1]);
+	    var array = [];
+	    for(var i = 0; i < binary.length; i++) {
+	        array.push(binary.charCodeAt(i));
+	    }
+	    return new Blob([new Uint8Array(array)], {type: 'image/jpeg'});
+	}
+	
+
+	function saveViaAJAX() {
+		final_context.drawImage(background_canvas, 0, 0);
+		final_context.drawImage(main_canvas, 0, 0);
+		var canvasData = final_canvas.toDataURL();
+		var blob = dataURItoBlob(canvasData);
+	    var postData = "canvasData="+canvasData;
+	    //var myPopup = window.open ("pleasewait.html", '', '');
+	    var dat = new FormData();
+	    var time = new Date().getTime();
+	    var newFilename="sharerootPin"+ time + "jpeg"
+		dat.append("key", "crosspromote/" + newFilename);
+		dat.append("AWSAccessKeyId", "AKIAI3WAYXNHBRKM5DGQ");
+		dat.append("acl", "private");
+		dat.append("Content-Type", "image/jpeg");
+		dat.append("policy", "eyJleHBpcmF0aW9uIjogIjIwMzAtMDEtMDFUMDA6MDA6MDBaIiwgImNvbmRpdGlvbnMiOiBbeyJidWNrZXQiOiAicGlucy5zaGFyZXJvb3QuY28ifSwgWyJzdGFydHMtd2l0aCIsICIka2V5IiwgImNyb3NzcHJvbW90ZS8iXSwgeyJhY2wiOiAicHJpdmF0ZSJ9LCBbInN0YXJ0cy13aXRoIiwgIiRDb250ZW50LVR5cGUiLCAiaW1hZ2UvanBlZyJdLCBbImNvbnRlbnQtbGVuZ3RoLXJhbmdlIiwgMCwgMTA0ODU3Nl1dfQ==");
+		dat.append("signature", "8tjqdQYXst1k4LX+xYQ+Rg+d/J8=");
+		dat.append("file", blob );
+
+		$.ajax({
+	        type: "POST",
+	        url: "http://pins.shareroot.co.s3.amazonaws.com/",
+	        data: dat,
+	        cache: false,
+	    	contentType: false,
+	        processData: false
+	    	 }
+	    ).done(function() {
+	    	imgURL="https://s3.amazonaws.com/pins.shareroot.co/crosspromote/"+newFilename
+			//myPopup.location ="//pinterest.com/pin/create/button/?url=http%3A%2F%2Fshareroot.co&media=https://s3.amazonaws.com/pins.shareroot.co/crosspromote/"+newFilename+"&description=success";
+		});
+	}
+	function postToTumblr(){
+
+		$.ajax({
+		    url: request_data.url,
+		    method: request_data.method,
+		    form: request_data.data,
+		    headers: oauth.toHeader(oauth.authorize(request_data)),
+		    success: function(data){
+		    	d=data.split("&");
+	            token.public = d[0];
+	            token.secret = d[1];
+	            callback_success = d[2];
+	            var option = new FormData();
+				var myPopup2 = window.open("http://www.tumblr.com/oauth/authorize?"+token.public,'','');
+		      }
+		}, function(error, response, body) {
+			console.log(body)
+		});
+
+
+
+
+		/*
+		var option = new FormData();
+		var myPopup2 = window.open ("pleasewait.html", '', '');
+		option.append("type", "photo");
+		option.append("source", imgURL)
+		$.ajax({
+			type:"POST",
+			url: "http://www.tumblr.com/oauth/request_token",
+			o_auth_consumer_key: "zLZDEzKfKaxtlMeFnG1dXrZ4jlo1pFZuDZRLQGR7izKBHB7DeJ"
+		}).done(function(){
+			myPopup2.location="http://www.tumblr.com/oauth/authorize"
+		});
+		/*$.ajax({
+			type:"POST",
+			url: "//api.tumblr.com/v2/blog/twicebasically.tumblr.com/post",
+			options:option
+
+
+		}).done(function() {
+			myPopup.location ="hello";
+		});*/
+	}
+	</script>
+</html>

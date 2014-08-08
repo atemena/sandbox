@@ -1,0 +1,26 @@
+<html> 
+  <head>
+    <title>S3 POST Form</title> 
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  </head>
+
+  <body> 
+    <form id="s3form" action="http://pins.shareroot.co.s3.amazonaws.com/" method="post" enctype="multipart/form-data">
+      <input type="hidden" name="key" value="crosspromote/${filename}">
+      <input type="hidden" name="AWSAccessKeyId" value="AKIAI3WAYXNHBRKM5DGQ"> 
+      <input type="hidden" name="acl" value="private"> 
+      <input type="hidden" name="success_action_redirect" value="https://s3.amazonaws.com/">
+      <input type="hidden" name="policy" value="eyJleHBpcmF0aW9uIjogIjIwMzAtMDEtMDFUMDA6MDA6MDBaIiwiY29uZGl0aW9ucyI6IFt7ImJ1Y2tldCI6ICJwaW5zLnNoYXJlcm9vdC5jbyJ9LFsic3RhcnRzLXdpdGgiLCAiJGtleSIsICJjcm9zc3Byb21vdGUvIl0seyJhY2wiOiAicHJpdmF0ZSJ9LHsic3VjY2Vzc19hY3Rpb25fcmVkaXJlY3QiOiAiaHR0cDovL2xvY2FsaG9zdC8ifSxbInN0YXJ0cy13aXRoIiwgIiRDb250ZW50LVR5cGUiLCAiIl0sWyJjb250ZW50LWxlbmd0aC1yYW5nZSIsIDAsIDEwNDg1NzZdXX0=">
+      <input type="hidden" name="signature" value="YYW2BwjQyFgKciDdD9//EUkpRHc=">
+      <input type="hidden" name="Content-Type" value="image/jpeg">
+      <!-- Include any additional input fields here -->
+
+      File to upload to S3: 
+      <input name="file" type="hidden"> 
+      <br> 
+      <input type="submit" value="Upload File to S3"> 
+    </form>
+    <script type="text/javascript">
+    </script> 
+  </body>
+</html>
