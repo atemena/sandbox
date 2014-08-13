@@ -2,10 +2,15 @@ require.config({
     baseUrl: '/static/js/',
     paths: {
     	jquery: 'jquery'
-    }
+    },
+    shim: {
+    	underscore: {
+    		exports: '_'
+    	}
+	}
 });
-require([ 'sandbox', "kinetic", "bootstrapCP", "bootstrapS", "jqueryKnob", "p", "recentPins"],
-function( sandbox, kinetic, bootstrapCP, bootstrapS, jqueryKnob, p, recentPins){
+require([ 'sandbox', "kinetic", "bootstrapCP", "bootstrapS", "jqueryKnob", "p", "recentPins", "underscore"],
+function( sandbox, kinetic, bootstrapCP, bootstrapS, jqueryKnob, p, recentPins, _){
 	
 
 	var canvas = null;
@@ -44,25 +49,26 @@ function( sandbox, kinetic, bootstrapCP, bootstrapS, jqueryKnob, p, recentPins){
 
 		//canvas
 		var canvasH= $('#height').slider({
-			min: 70,
-			max: 1000,
+			min: 10,
+			max: 100,
 			orientation: 'horizontal',
 			value: 400
 		}).on('slide', function(ev){
-			canvas.scale(ev.value, canvas.stage.getHeight());
+			canvas.selectedGroup.shapeGradient({'startPoint':{'x': ev.value}});
 		}).data('slider');
 
 		var canvasW= $('#width').slider({
-			min: 70,
-			max: 780,
+			min: 10,
+			max: 100,
 			orientation: 'horizontal',
 			value: 300
 		}).on('slide', function(ev){
-			canvas.scale(canvas.stage.getWidth(), ev.value);
+			canvas.selectedGroup.shapeGradient({'startPoint':{'y': ev.value}});
 		}).data('slider');
 
 		$('#bgColor').colorpicker({format:"rgba"}).on('changeColor', function(ev){
-		  canvas.setBackgroundColor(ev.color.toRGB());
+		  //canvas.rootGroup.editShape({});
+		  //canvas.setBackgroundColor(ev.color.toRGB());
 		});
 
 		//shadows
@@ -88,7 +94,7 @@ function( sandbox, kinetic, bootstrapCP, bootstrapS, jqueryKnob, p, recentPins){
 		}).data('slider'); 
 
 		//shapes
-		var shapeH= $('#shapeH').slider({
+		/*var shapeH= $('#shapeH').slider({
 			min: 10,
 			max: 1000,
 			orientation: 'horizontal',
@@ -102,6 +108,24 @@ function( sandbox, kinetic, bootstrapCP, bootstrapS, jqueryKnob, p, recentPins){
 			orientation: 'horizontal',
 		}).on('slide', function(ev){
 			canvas.selectedGroup.editShape({'width':ev.value});
+		}).data('slider');*/
+
+
+		//shapes
+		var shapeH= $('#shapeH').slider({
+			min: 10,
+			max: 100,
+			orientation: 'horizontal',
+		}).on('slide', function(ev){
+			canvas.selectedGroup.shapeGradient({'endPoint':{'x': ev.value}});
+		}).data('slider');
+
+		var shapeW= $('#shapeW').slider({
+			min: 10,
+			max: 100,
+			orientation: 'horizontal',
+		}).on('slide', function(ev){
+			canvas.selectedGroup.shapeGradient({'endPoint':{'x': ev.value}});
 		}).data('slider');
 
 
@@ -179,12 +203,12 @@ function( sandbox, kinetic, bootstrapCP, bootstrapS, jqueryKnob, p, recentPins){
 
 	$(".shadowApplyAll").click(function() {
 		var shadowOptions = [
-			{'opacity': 0, 'offsetX': 0, 'offsetY': 0},
-			{'opacity': .25, 'offsetX': 20, 'offsetY': 20},
-			{'opacity': .50, 'offsetX': 20, 'offsetY': 20, 'blur': 3},
-			{'opacity': .75, 'offsetX': 20, 'offsetY': 20, 'blur': 3},
+			{'opacity': 0, 'horizontalOffsetX': 0, 'verticalOffsetY': 0},
+			{'opacity': .25, 'horizontalOffsetX': 20, 'verticalOffsetY': 20},
+			{'opacity': .50, 'horizontalOffsetX': 20, 'verticalOffsetY': 20, 'blur': 3},
+			{'opacity': .75, 'horizontalOffsetX': 20, 'verticalOffsetY': 20, 'blur': 3},
 		];
-		canvas.selectedGroup.shadow(shadowOptions[parseInt($(this).val())]);
+		canvas.selectedGroup.shadowEdit(shadowOptions[parseInt($(this).val())]);
 	});
 
 	$("#pinLoad").click(function() {
@@ -198,7 +222,7 @@ function( sandbox, kinetic, bootstrapCP, bootstrapS, jqueryKnob, p, recentPins){
 			canvas.selectedGroup.rect = { 'width' : 'auto', 'height' : 'auto', 'x' : 'auto', 'y' : 'auto'};
 			canvas.addShape(canvas.selectedGroup);
 		}else{
-			canvas.addShape({'curve': -1, 'color':'rgba(0,0,0,0.5', 'rect': {'width': canvas.stage.getWidth(), 'height': canvas.stage.getHeight(), 'x': 0, 'y':0}, 'resizingMask': 18});
+			canvas.addShape({'curve': -1, 'color':'rgba(0,0,0,0.5)', 'rect': {'width': canvas.stage.getWidth(), 'height': canvas.stage.getHeight(), 'x': 0, 'y':0}, 'resizingMask': 18});
 		}
 	});
 	$("#addSubgroup").click(function() {
@@ -209,9 +233,10 @@ function( sandbox, kinetic, bootstrapCP, bootstrapS, jqueryKnob, p, recentPins){
 			canvas.selectedGroup.curve = 0;
 			canvas.selectedGroup.color = 'rgba(0,0,0,0.5)';
 			canvas.selectedGroup.rect = { 'width' : 'auto', 'height' : 'auto', 'x' : 'auto', 'y' : 'auto'};
+			canvas.selectedGroup.gradient = {'colors':['red','blue','yellow'], 'direction':'radial', 'colorStops':[0,0.25,1], 'startPoint':{'x':0, 'y':0}, 'endPoint':{'x':30, 'y':30}};
 			canvas.addShape(canvas.selectedGroup);
 		}else{
-			canvas.addShape({'curve': 0, 'color':'rgba(0,0,0,0.5', 'rect': {'width': canvas.stage.getWidth(), 'height': canvas.stage.getHeight(), 'x': 0, 'y': 0}, 'resizingMask': 18});
+			canvas.addShape({'curve': 0, 'color':'rgba(0,0,0,0.5)', 'rect': {'width': canvas.stage.getWidth(), 'height': canvas.stage.getHeight(), 'x': 0, 'y': 0}, 'resizingMask': 18});
 		}
 	});
 	$("#resize").click(function() {

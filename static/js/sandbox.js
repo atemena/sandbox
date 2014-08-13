@@ -4,18 +4,18 @@
 
 	var Group = function(group){
 		this.rect = {'x':0, 'y':0,'width': 0, 'height': 0};
-		this.stroke = {color: '#00000000', width:0};
+		this.stroke = {'color': '#00000000', 'width':0};
 		this.color='#00000000';
-		this.gradient = {colors:[], direction:'vertical', colorStops:[]};
+		this.gradient = {'colors':[], 'direction':'none', 'colorStops':[], 'startPoint':{'x':0, 'y':0}, 'endPoint':{'x':0, 'y':0}};
 		this.padding = 0;
 		this.curve = 0;
 		this.alpha;
 		this.rotation = 0;
 		this.resizingMask = 0;
-		this.shadow;
+		this.shadow = {'horizontalOffset': 0, 'verticalOffset': 0, 'blur': 0, 'color': 'rgba(0,0,0,1)'};
 		this.image = new Img();
 		this.text = new Txt();
-		this.subgroups = []; //contains image text shape and sublayers
+		this.subgroups = [];
 		this.name;
 
 		//temp variables
@@ -23,10 +23,14 @@
 		this.shapeKO;
 		this.parent;
 		this.originalSize = {'width': 0, 'height':0};
-		this.margins = {'left': 0, 'right': 0, 'top': 0, 'bottom': 0}; //necessary?
+		this.margins = {'left': 0, 'right': 0, 'top': 0, 'bottom': 0};
 
 		//copys values from another group object
 		this.copyValues = function(group){
+			/*_.each(group, function(value, key){
+				if(key != 'text' || key != 'image')
+					//this[key] = value;
+			}, this);*/
 			if(group.hasOwnProperty('name'))
 				this.name = group.name;
 			if(group.hasOwnProperty('rect')){
@@ -49,14 +53,44 @@
 				this.rotation = group.rotation;
 			if(group.hasOwnProperty('resizingMask'))
 				this.resizingMask = group.resizingMask;
-			if(group.hasOwnProperty('stroke'))
-				this.stroke = group.stroke;
-			if(group.hasOwnProperty('gradient'))
-				this.gradient = group.gradient;
+			if(group.hasOwnProperty('stroke')){
+				if(group.stroke.hasOwnProperty('color'))
+					this.stroke.color = group.stroke.color;
+				if(group.stroke.hasOwnProperty('width'))
+					this.stroke.width = group.stroke.width;
+			}
+			if(group.hasOwnProperty('gradient')){
+				if(group.gradient.hasOwnProperty('colors'))
+					this.gradient.colors = group.gradient.colors;
+				if(group.gradient.hasOwnProperty('direction'))
+					this.gradient.direction = group.gradient.direction;
+				if(group.gradient.hasOwnProperty('colorStops'))
+					this.gradient.colorStops = group.gradient.colorStops;
+				if(group.gradient.hasOwnProperty('startPoint')){
+					if(group.gradient.startPoint.hasOwnProperty('x'))
+						this.gradient.startPoint.x = group.gradient.startPoint.x;
+					if(group.gradient.startPoint.hasOwnProperty('y'))
+						this.gradient.startPoint.y = group.gradient.startPoint.y;
+				}
+				if(group.gradient.hasOwnProperty('endPoint')){
+					if(group.gradient.endPoint.hasOwnProperty('x'))
+						this.gradient.endPoint.x = group.gradient.endPoint.x;
+					if(group.gradient.endPoint.hasOwnProperty('y'))
+						this.gradient.endPoint.y = group.gradient.endPoint.y;
+				}
+			}
 			if(group.hasOwnProperty('alpha'))
 				this.alpha = group.alpha;
-			if(group.hasOwnProperty('shadow'))
-				this.shadow = group.shadow;
+			if(group.hasOwnProperty('shadow')){
+				if(group.gradient.hasOwnProperty('horizontalOffset'))
+					this.gradient.horizontalOffset = group.gradient.horizontalOffset;
+				if(group.gradient.hasOwnProperty('verticalOffset'))
+					this.gradient.verticalOffset = group.gradient.verticalOffset;
+				if(group.gradient.hasOwnProperty('blur'))
+					this.gradient.blur = group.gradient.blur;
+				if(group.gradient.hasOwnProperty('color'))
+					this.gradient.color = group.gradient.color;
+			}
 			if(group.hasOwnProperty('image'))
 				this.image.copyValues(group.image);
 			if(group.hasOwnProperty('text'))
@@ -71,8 +105,41 @@
 				this.rotation = this.shapeKO.rotation();
 				this.stroke = {'color':this.shapeKO.stroke(), 'width':this.shapeKO.strokeWidth()};
 				this.alpha = this.shapeKO.fillAlpha();
-				//shadow this. = this.ko.shapeKO.;
-				//gradient this. = this.ko.shapeKO.;
+				this.shadow = {'horizontalOffset': this.shapeKO.shadowOffsetX(),
+				 			   'verticalOffset': this.shapeKO.shadowOffsetY(), 
+				 			   'blur': this.shapeKO.shadowBlur(), 
+				 			   'color': this.shapeKO.shadowColor() 
+				 			};
+				 if(this.shapeKO.fillPriority() === 'linear-gradient'){
+					var colors = [];
+					var stops = [];
+					var colorStops = this.shapeKO.fillLinearGradientColorStops();
+					for(var i = 0; i < this.shapeKO.fillLinearGradientColorStops().length; i++){
+						if (i%2 == 1)
+					 		colors.push(colorStops[i]);
+					 	else
+					 		stops.push(colorStops[i]);
+					}
+					this.gradient.colors = colors; 
+					this.gradient.colorStops = stops; 
+					this.gradient.startPoint = this.shapeKO.fillLinearGradientStartPoint();
+					this.gradient.endPoint = this.shapeKO.fillLinearGradientEndPoint();
+				}else if(this.shapeKO.fillPriority() === 'radial-gradient'){
+					var colors = [];
+					var stops = [];
+					var colorStops = this.shapeKO.fillRadialGradientColorStops();
+					for(var i = 0; i < this.shapeKO.fillRadialGradientColorStops().length; i++){
+						if (i%2 == 1)
+					 		colors.push(colorStops[i]);
+					 	else
+					 		stops.push(colorStops[i]);
+					}
+					this.gradient.colors = colors; 
+					this.gradient.colorStops = stops; 
+					this.gradient.startPoint = this.shapeKO.fillRadialGradientStartPoint();
+					this.gradient.endPoint = this.shapeKO.fillRadialGradientEndPoint();
+				}
+
 			}
 			if(this.getMainNode()){
 				if(this.getMainNode().getClassName() === 'Image')
@@ -82,14 +149,19 @@
 			}
 		};
 
+		//todo: fix this
 		this.groupToKinetic = function(){
-			this.shapeWidth = this.shapeKO.getWidth();
-			this.shapeHeight =  this.shapeKO.getHeight();
-			this.color = this.shapeKO.getFill();
-			this.rotation = this.ko.rotation();
-			this.stroke = {color: this.shapeKO.stroke, width:this.shapeKO.strokeWidth};
-			this.alpha = this.shapeKO.getAlpha();
-			this.shadow = {}; // TODO: filll in later
+			this.shapeKO.getWidth(this.shapeWidth);
+			this.shapeKO.getHeight(this.shapeHeight);
+			this.shapeKO.getFill(this.color);
+			// replace with a call to this.rotate this.ko.rotation(this.rotation);
+			this.shapeKO.stroke(this.stroke.color)
+			this.shapeKO.strokeWidth(this.stroke.width);
+			this.shapeKO.opacity(this.alpha);
+			this.shapeKO.shadowColor(this.shadow.color); 
+			this.shapeKO.shadowBlur(this.shadow.blur); 
+			this.shapeKO.shadowOffsetX(this.shadow.horizontalOffset);
+			this.shapeKO.shadowOffsetY(this.shadow.verticalOffset);  
 		};
 
 		this.rotate = function(rotation){
@@ -112,6 +184,7 @@
 		};
 
 		this.getGroupCenter = function(){
+			//TODO
 			return {'x': 0, 'y':0};
 		};
 
@@ -121,41 +194,135 @@
 				this.color = color;
 				canvas.mainLayer.batchDraw();
 			}
-		}
+		};
 		this.textFont = function(font){
 			if(this.text.ko){
 				this.text.ko.fontFamily(font);
 				this.text.font = font;
+				this.text.ko.setOffsetX(this.text.ko.getWidth()/2);
+				this.text.ko.setOffsetY(this.text.ko.getHeight()/2);
 				if(canvas.autoSize == true && this.hasOwnProperty('shapeKO'))
 					this.editShape({'width': this.text.ko.getWidth() + this.padding, 'height': this.text.ko.getHeight()});
 				canvas.mainLayer.batchDraw();
 			}
-		}
+		};
 		this.textContent = function(text){
 			if(this.text.ko){
 				this.text.ko.text(text);
 				this.text.content = text;
+				this.text.ko.setOffsetX(this.text.ko.getWidth()/2);
+				this.text.ko.setOffsetY(this.text.ko.getHeight()/2);
 				if(canvas.autoSize == true && this.hasOwnProperty('shapeKO'))
 					this.editShape({'width': this.text.ko.getWidth() + this.padding, 'height': this.text.ko.getHeight()});
 				canvas.mainLayer.batchDraw();
 			}
-		}
+		};
 		this.textAlign = function(align){
 			if(this.text.ko){
 				this.text.ko.align(align);
+				this.text.ko.setOffsetX(this.text.ko.getWidth()/2);
+				this.text.ko.setOffsetY(this.text.ko.getHeight()/2);
 				this.text.justification = align;
 				canvas.mainLayer.batchDraw();
 			}
-		}
+		};
 		this.textSize = function(size){
 			if(this.text.ko){
 				this.text.ko.fontSize(size);
 				this.text.size = size;
+				this.text.ko.setOffsetX(this.text.ko.getWidth()/2);
+				this.text.ko.setOffsetY(this.text.ko.getHeight()/2);
 				if(canvas.autoSize == true && this.hasOwnProperty('shapeKO'))
 					this.editShape({'width': this.text.ko.getWidth() + this.padding, 'height': this.text.ko.getHeight()});
 				canvas.mainLayer.batchDraw();
 			}
-		}
+		};
+
+		this.shapeGradient = function(gradient){
+			//if config has a linear then change linear gradient
+			//else use group
+			//check if config has direction
+			//if no direction use this.direction
+			var direction = this.gradient.direction;
+			var startPointX = this.gradient.startPoint.x;
+			var startPointY = this.gradient.startPoint.y;
+			var endPointX = this.gradient.endPoint.x;
+			var endPointY = this.gradient.endPoint.y;
+			var colors = this.gradient.colors;
+			var stops = this.gradient.colorStops;
+
+			if(gradient.hasOwnProperty('direction'))
+				direction = gradient.direction;
+
+			if(gradient.hasOwnProperty('startPoint')){
+				if(gradient.startPoint.hasOwnProperty('x'))
+					startPointX = gradient.startPoint.x;
+				if(gradient.startPoint.hasOwnProperty('y'))
+					startPointY = gradient.startPoint.y;
+			}
+			if(gradient.hasOwnProperty('endPoint')){
+				if(gradient.endPoint.hasOwnProperty('x'))
+					endPointX = gradient.endPoint.x;
+				if(gradient.endPoint.hasOwnProperty('y'))
+					endPointY = gradient.endPoint.y;
+			}
+			if(gradient.hasOwnProperty('colors'))
+				colors = gradient.colors;
+			if(gradient.hasOwnProperty('colorStops'))
+				stops = gradient.colorStops;
+			var colorStops = []
+			for(var i = 0; i < colors.length && i < stops.length; i++){
+				colorStops.push(stops[i]);
+				colorStops.push(colors[i]);
+			}
+			if(this.hasOwnProperty('shapeKO')){
+				if(direction === 'linear'){
+					this.shapeKO.fillLinearGradientStartPointX(startPointX);
+					this.shapeKO.fillLinearGradientStartPointY(startPointY);
+					this.shapeKO.fillLinearGradientEndPointX(endPointX);
+					this.shapeKO.fillLinearGradientEndPointY(endPointY);
+					this.shapeKO.fillLinearGradientColorStops(colorStops);
+					this.shapeKO.fillPriority('linear-gradient');
+				}else if (direction === 'radial') {
+					this.shapeKO.fillRadialGradientStartPointX(startPointX);
+					this.shapeKO.fillRadialGradientStartPointY(startPointY);
+					this.shapeKO.fillRadialGradientEndPointX(endPointX);
+					this.shapeKO.fillRadialGradientEndPointY(endPointY);
+					this.shapeKO.fillRadialGradientColorStops(colorStops);
+					this.shapeKO.fillPriority('radial-gradient');
+				}
+			}
+			canvas.mainLayer.batchDraw();
+			//UPDATE GROUP
+		};
+
+		this.shapeFill = function(color){
+			var fill = this.color;
+			if(color)
+				fill = color;
+			this.shapeKO.fill('color');
+			//update group
+		};
+		this.shapeShadow = function(){
+
+			if(!config.hasOwnProperty('shadow')){
+				config.shadowOffsetX = self.shadow.horizontalOffset;
+				config.shadowOffsetY = self.shadow.verticalOffset;
+				config.shadowBlur = self.shadow.blur;
+				config.shadowColor = self.shadow.color;
+			}else{
+				if(!config.shadow.hasOwnProperty('shadowOffsetX'))
+					config.shadowOffsetX = self.shadow.horizontalOffset;
+				if(!config.shadow.hasOwnProperty('shadowOffsetY'))
+					config.shadowOffsetY = self.shadow.verticalOffset;
+				if(!config.shadow.hasOwnProperty('shadowBlur'))
+					config.shadowBlur = self.shadow.blur;
+				if(!config.shadow.hasOwnProperty('shadowColor'))
+					config.shadowColor = self.shadow.color;
+			}
+		};
+
+
 		this.vcenter = function() {
 			if(this.selectedGroup.ko.getParent().getClassName() === 'Group' ){
 				var stageHeight = canvas.stage.getHeight();
@@ -189,30 +356,38 @@
 		};
 
 
-		this.shadow=function(s){
-			var node;
-			if(this.shapeKO){
+		this.shadowEdit = function(s){
+			var node = false;
+			if(this.hasOwnProperty('shapeKO')){
 				node = this.shapeKO;
 				if(this.getMainNode()){
-					this.getMainNode().shadowAlpha = 0;
-					this.getMainNode().shadowOffsetX = 0;
-					this.getMainNode().shadowOffsetY = 0;
+					this.getMainNode().shadowOpacity(0);
+					this.getMainNode().shadowOffsetX(0);
+					this.getMainNode().shadowOffsetY(0);
 				}	
 			}else{
 				node = this.getMainNode();
 			}
-			if(s.hasOwnProperty('color'))
-				node.shadowColor(s.color);
-			if(s.hasOwnProperty('blur'))
-				node.shadowBlur(s.blur);
-			if(s.hasOwnProperty('offsetX'))
-				node.shadowOffsetX(s.offsetX);
-			if(s.hasOwnProperty('offsetY'))
-				node.shadowOffsetY(s.offsetY);
-			if(s.hasOwnProperty('opacity'))
-				node.shadowOpacity(s.opacity);
+			if(node){
+				if(s.hasOwnProperty('color'))
+					node.shadowColor(s.color);
+				if(s.hasOwnProperty('blur'))
+					node.shadowBlur(s.blur);
+				if(s.hasOwnProperty('horizontalOffsetX'))
+					node.shadowOffsetX(s.horizontalOffsetX);
+				if(s.hasOwnProperty('verticalOffsetY'))
+					node.shadowOffsetY(s.verticalOffsetY);
+				if(s.hasOwnProperty('opacity'))
+					node.shadowOpacity(s.opacity);
+				this.shadow = {'horizontalOffset': node.shadowOffsetX(), 
+							   'verticalOffset': node.shadowOffsetY(), 
+							   'blur': node.shadowBlur(), 
+							   'color': node.shadowColor()
+							  };
+			}
 			canvas.mainLayer.batchDraw();
 		};
+
 		this.editImage=function(img){
 			if(canvas.selectedGroup){
 				if(this.image.ko){
@@ -238,13 +413,11 @@
 					config.height = self.shapeKO.getHeight();
 				if(!config.hasOwnProperty('curve'))
 					config.curve = self.curve;
-				if(!config.hasOwnProperty('fill'))
-					config.fill = self.color;
 				if(!config.hasOwnProperty('stroke')){
 					config.stroke = self.stroke.color;
 					config.strokeWidth = self.stroke.width;
 				}
-				//add new shape
+				
 				if (config.curve>=0){
 					newShape = new Kinetic.Shape(canvas._extendConfig({
 						sceneFunc: function(context){
@@ -262,13 +435,8 @@
 						},
 						x: self.shapeKO.getX(),
 						y: self.shapeKO.getY(),
-						fill: config.fill,
-						stroke: config.stroke,
-						strokeWidth: config.strokeWidth,
-						draggable: false,
-						width: config.width,
-						height: config.height
-					}));
+						draggable: false
+					}, config));
 					newShape.setOffsetX(newShape.getWidth()/2);
 					newShape.setOffsetY(newShape.getHeight()/2);
 				}else if (config.curve == -1){
@@ -276,17 +444,21 @@
 						radius: {x: config.width/2, y:config.height/2},
 						x: self.shapeKO.getX(),
 						y: self.shapeKO.getY(),
-						fill: config.fill,
-						stroke: config.stroke,
-						strokeWidth: config.strokeWidth,
 						draggable:false								
-					}));
+					}, config));
 				}
 
 				this.ko.add(newShape);
 				//delete and remove ko object
+				//call fill, gradient, shadow
 				var oldWidth = this.shapeKO.getWidth();
 				var oldHeight = this.shapeKO.getHeight();
+				var fillPriority = this.shapeKO.fillPriority();
+				if(fillPriority === 'color'){
+					this.newShape.shapeFill({});
+				}else if(fillPriority === 'linear-gradient' || fillPriority === 'radial-gradient'){
+					this.newShape.shapeGradient({});
+				}
 				this.shapeKO.destroy();
 				this.shapeKO = newShape;
 				this.shapeKO.moveToBottom();
@@ -298,6 +470,11 @@
 				this.stroke.color = config.stroke;
 				this.stroke.width = config.strokeWidth
 				this.curve = config.curve;
+				this.shadow = {'horizontalOffset': config.shadowOffsetX, 
+									  'verticalOffset': config.shadowOffsetY, 
+									  'blur': config.shadowBlur, 
+									  'color': config.shadowColor
+									 };
 				canvas.mainLayer.batchDraw();
 			}
 		};
@@ -331,6 +508,12 @@
 			}
 		};
 
+		this.updateMargins = function(){
+			this.margins.left = this.ko.getAbsolutePosition().x;
+			this.margins.top = this.ko.getAbsolutePosition().y;
+			this.margins.right = this.ko.getAbsolutePosition().x + this.shapeKO.getWidth();
+			this.margins.bottom = this.ko.getAbsolutePosition().y + this.shapeKO.getHeight();
+		};
 
 		this.getMainNode=function(group){
 			for(var i = 0; i<this.ko.getChildren().length; i++){
@@ -503,6 +686,7 @@
 			this.mainLayer.batchDraw();
 			this.selectedGroup;
 			this.secondaryGroups = [];
+			this.autoSize = true;
 
 			this.loadImages = function(container, imageArray, click, format) {
 				var i;
@@ -626,8 +810,8 @@
 						newGroup.rect.width = this.stage.getWidth();
 					}
 					if(newGroup.rect.height === 0){
-						newGroup.ko.setHeight(this.stage.getWidth);
-						newGroup.rect.height = this.stage.getWidth;
+						newGroup.ko.setHeight(this.stage.getHeight());
+						newGroup.rect.height = this.stage.getHeight();
 					}
 					self.mainLayer.add(newGroup.ko);
 					self.scale(newGroup.rect.width, newGroup.rect.height);
@@ -691,7 +875,8 @@
 							imageKO.setY(group.shapeKO.getHeight()/2);
 					}
 				}
-				
+				if(group.hasOwnProperty('shapeKO'))
+					imageKO.shadowOpacity(0);
 
 				//replace with one call to copy values and update rect
 				//vvvv
@@ -813,6 +998,17 @@
 							config.y = group.rect.height/2;
 					}
 				}
+				if(group.hasOwnProperty('shadow')){
+					if(group.hasOwnProperty('horizontalOffsetX'))
+						config.shadowOffsetX = group.shadow.horizontalOffsetX;
+					if(group.hasOwnProperty('verticalOffsetY'))
+						config.shadowOffsetY = group.shadow.verticalOffsetY;
+					if(group.hasOwnProperty('blur'))
+						config.shadowBlur = group.shadow.blur;
+					if(group.hasOwnProperty('color'))
+						config.shadowColor = group.shadow.color;
+				}
+
 				if(!self.selectedGroup  || (self.selectedGroup.parent === 'root' && self.selectedGroup.getMainNode())){
 					self.addSubgroup();
 				}else if(self.selectedGroup.getMainNode()){
@@ -839,6 +1035,8 @@
 						textKO.setY(self.selectedGroup.shapeKO.getHeight()/2);
 					}
 				}
+				if(group.hasOwnProperty('shapeKO'))
+					textKO.shadowOpacity(0);
 
 
 				self.selectedGroup.originalSize.width = textKO.getWidth();
@@ -874,9 +1072,9 @@
 				if(group.hasOwnProperty('rotation'))
 					config.rotation = group.rotation;
 				if (group.hasOwnProperty('resizingMask'))
+					config.resizingMask = group.resizingMask;
 				if(group.hasOwnProperty('alpha'))
 					config.alpha = group.alpha;
-					config.resizingMask = group.resizingMask;
 				if(group.hasOwnProperty('stroke')){
 					if (group.stroke.hasOwnProperty('color'))
 						config.stroke = group.stroke.color;
@@ -894,6 +1092,59 @@
 						if(group.rect.height != 'auto') 
 							config.y = group.rect.height/2;
 					}
+				}
+				if(group.hasOwnProperty('shadow')){
+					if(group.shadow.hasOwnProperty('horizontalOffsetX'))
+						config.shadowOffsetX = group.shadow.horizontalOffsetX;
+					if(group.shadow.hasOwnProperty('verticalOffsetY'))
+						config.shadowOffsetY = group.shadow.verticalOffsetY;
+					if(group.shadow.hasOwnProperty('blur'))
+						config.shadowBlur = group.shadow.blur;
+					if(group.shadow.hasOwnProperty('color'))
+						config.shadowColor = group.shadow.color;
+				}
+
+				if(group.hasOwnProperty('gradient')){
+					var colorStops = [0, 'gray', 1, 'black'];
+					if(group.gradient.hasOwnProperty('colors') && group.gradient.hasOwnProperty('colorStops')){
+						if(group.gradient.colors.length > 0 && group.gradient.colorStops.length > 0)
+							colorStops = [];
+						for(var i = 0; i < group.gradient.colors.length && i < group.gradient.colorStops.length; i++){
+							colorStops.push(group.gradient.colorStops[i]);
+							colorStops.push(group.gradient.colors[i]);
+						}
+					}
+					var startPointX = 0;
+					var startPointY = 0;
+					var endPointX = 150;
+					var endPointY = 150;
+					if(group.gradient.hasOwnProperty('startPoint') && group.gradient.hasOwnProperty('endPoint') ){
+						if(group.gradient.startPoint.hasOwnProperty('x'))
+							startPointX = group.gradient.startPoint.x;
+						if(group.gradient.startPoint.hasOwnProperty('y'))
+							startPointY = group.gradient.startPoint.y;
+						if(group.gradient.endPoint.hasOwnProperty('x'))
+							endPointX = group.gradient.endPoint.x;
+						if(group.gradient.endPoint.hasOwnProperty('y'))
+							endPointY = group.gradient.endPoint.y;
+					}
+					if(group.gradient.direction === 'linear'){
+						config.fillLinearGradientStartPoint = {'x':group.gradient.startPoint.x, 'y': group.gradient.startPoint.y};
+						config.fillLinearGradientEndPoint = {'x': group.gradient.endPoint.x, 'y':group.gradient.endPoint.y};
+						config.fillLinearGradientColorStops = colorStops;
+						config.fillPriority = 'linear-gradient';
+					} else if(group.gradient.direction === 'radial'){
+						config.fillRadialGradientStartPoint = {'x':group.gradient.startPoint.x, 'y': group.gradient.startPoint.y};
+						config.fillRadialGradientEndPoint = {'x': group.gradient.endPoint.x, 'y':group.gradient.endPoint.y};
+						config.fillRadialGradientColorStops = colorStops;
+						config.fillPriority = 'radial-gradient';
+					}else{
+						config.fillPriority = 'color';
+					}
+				}else{
+					//fix later
+					group.gradient = {};
+					group.gradient.direction = 'none';
 				}
 
 				if(!self.selectedGroup  || (self.selectedGroup.parent === 'root' && self.selectedGroup.shapeKO)){
@@ -956,6 +1207,18 @@
 					}
 				}
 
+				if(self.selectedGroup.getMainNode()){
+					var node = group.getMainNode();
+					if(node.hasShadow() && !shape.hasShadow()){
+						shape.shadowOpacity(node.shadowOpacity());
+						shape.shadowOffsetX(node.shadowOffsetX());
+						shape.shadowOffsetY(node.shadowOffsetY());
+						shape.shadowBlur(node.shadowBlur());
+						shape.shadowColor(node.shadowColor());
+					}
+					node.shadowOpacity(0);
+				}
+
 
 				//shape.setOffsetY(height/2);
 				self.selectedGroup.originalSize.width = shape.getWidth();
@@ -963,7 +1226,10 @@
 				self.selectedGroup.shapeKO = shape;
 				self.selectedGroup.curve = config.curve;
 				self.selectedGroup.resizingMask = config.resizingMask;
+				self.selectedGroup.gradient.direction = group.gradient.direction;
 				self.selectedGroup.kineticToGroup();
+				self.selectedGroup.updateMargins();
+				//apply shadow to group
 				self.relayer(self.selectedGroup);
 				self.mainLayer.batchDraw();			
 			};
@@ -995,14 +1261,14 @@
 							parent.subgroups.splice(parent.subgroups.indexOf(group), 1);
 						//group.rect.x = group.rect.x + parent.rect.x;
 						//group.rect.y =  group.rect.y + parent.rect.y;
-
+						//get absolute position of both new parent and child and 
+						var newOrigin = newParent.ko.getAbsolutePosition();
+						var childPos = group.ko.getAbsolutePosition();
 						var zIndex = parent.ko.getZIndex();
 						group.ko.remove();
 						newParent.ko.add(group.ko);
 						group.ko.setZIndex(zIndex + 1);
-						//get absolute position of both new parent and child and 
-						var newOrigin = newParent.ko.getAbsolutePosition();
-						var childPos = group.ko.getAbsolutePosition();
+						
 						group.ko.setX(childPos.x - newOrigin.x);
 						group.ko.setY(childPos.y - newOrigin.y);
 						group.rect.x = childPos.x - newOrigin.x;
@@ -1030,16 +1296,23 @@
 				return childrenArray;
 			}
 
-			this.delete=function(){
+			this.delete=function(group){
 				//get subchildren and parents
-				var subgroups = this.selectedGroup.children;
-				var parent = this.selectedGroup.parent;
-				if(parent === 'root')
-					//parent = this.selectedGroup.children[0]
-				for(var i = 0; i < subgroups.length; i++){
-					this.reorder(parent, subgroups[i])
+				if(!group)
+					group = this.selectedGroup
+				var subgroups = group.subgroups;
+				var parent = group.parent;
+				var i = 0;
+				if(parent === 'root'){
+					parent = subgroups[0];
+					i = 1;
 				}
-				//remove from parents group and this.selectedGroup.ko.remove()
+				while( i < subgroups.length){
+					this.reorder(parent, subgroups[i]);
+					i++;
+				}
+				group.ko.destroy();
+				parent.subgroups.splice(parent.subgroups.indexOf(group), 1);
 
 			};
 			
@@ -1051,100 +1324,109 @@
 				this.border.setHeight(newHeight);
 				this.stage.setWidth(newWidth);
 				this.stage.setHeight(newHeight);
-				this.groupScale(this.rootGroup, diffX, diffY);
+				if(this.hasOwnProperty('rootGroup'))
+					this.groupScale(this.rootGroup, diffX, diffY);
 			};
 
 			this.groupScale = function(group, diffX, diffY){
 				//group.resizingMask
-				var flexLeft = (group.resizingMask & 1) === 1;
-				var flexWidth = (group.resizingMask & 2)=== 2;
-				var flexRight = (group.resizingMask & 4)=== 4;
-				var flexTop = (group.resizingMask & 8)=== 8;
-				var flexHeight = (group.resizingMask & 16) === 16;
-				var flexBottom = (group.resizingMask & 32) === 32;
-				if (group.resizingMask != 0) {
-					//1
-					if(flexLeft && !flexWidth && !flexRight){
-						group.ko.setX(group.ko.x() + diffX );
+				if(group.hasOwnProperty('resizingMask')){
+					var flexLeft = (group.resizingMask & 1) === 1;
+					var flexWidth = (group.resizingMask & 2)=== 2;
+					var flexRight = (group.resizingMask & 4)=== 4;
+					var flexTop = (group.resizingMask & 8)=== 8;
+					var flexHeight = (group.resizingMask & 16) === 16;
+					var flexBottom = (group.resizingMask & 32) === 32;
+					if(group.hasOwnProperty('shapeKO')){
+						//var distanceLeft = group.ko.getAbsolutePosition().x;
+						//var distanceRight = this.stage.getWidth() - (group.ko.getAbsolutePosition().x + this.shapeKO.getWidth());
+						//var distanceTop = group.ko.getAbsolutePosition().y;
+						//var distanceBottom = this.stage.getHeight() - (group.ko.getAbsolutePosition().y + this.shapeKO.getHeight());
 					}
-					//2
-					else if(!flexLeft && flexWidth && !flexRight){
-						if(group.shapeKO.getWidth() + diffX > group.originalSize.width){
-							group.editShape({'width': group.shapeKO.getWidth() + diffX} );
-							group.ko.setX(group.ko.x() + diffX/2 );	
+					if (group.resizingMask != 0) {
+						//1
+						if(flexLeft && !flexWidth && !flexRight){
+							group.ko.setX(group.ko.x() + diffX );
 						}
-					}
-					//3
-					else if(flexLeft && flexWidth && !flexRight){
-						if(group.shapeKO.getWidth() + diffX/2 > group.originalSize.width){
-							group.editShape({'width': group.shapeKO.getWidth() + diffX/2} );
+						//2
+						else if(!flexLeft && flexWidth && !flexRight){
+							if(group.shapeKO.getWidth() + diffX > group.originalSize.width){
+								group.editShape({'width': group.shapeKO.getWidth() + diffX} );
+								group.ko.setX(group.ko.x() + diffX/2 );	
+							}
+						}
+						//3
+						else if(flexLeft && flexWidth && !flexRight){
+							if(group.shapeKO.getWidth() + diffX/2 > group.originalSize.width){
+								group.editShape({'width': group.shapeKO.getWidth() + diffX/2} );
+								group.ko.setX(group.ko.x() + diffX/2 );
+							}
+						}
+						//4 = default behaviour				
+						//5
+						else if(flexLeft && !flexWidth && flexRight){
 							group.ko.setX(group.ko.x() + diffX/2 );
 						}
-					}
-					//4 = default behaviour				
-					//5
-					else if(flexLeft && !flexWidth && flexRight){
-						group.ko.setX(group.ko.x() + diffX/2 );
-					}
-					//6
-					else if(!flexLeft && flexWidth && flexRight){
-						if(group.shapeKO.getWidth() + diffX/2 > group.originalSize.width){
-							group.editShape({'width': group.shapeKO.getWidth() + diffX/2} );
-							group.ko.setX(group.ko.x() + diffX/4 );
+						//6
+						else if(!flexLeft && flexWidth && flexRight){
+							if(group.shapeKO.getWidth() + diffX/2 > group.originalSize.width){
+								group.editShape({'width': group.shapeKO.getWidth() + diffX/2} );
+								group.ko.setX(group.ko.x() + diffX/4 );
+							}
 						}
-					}
-					//7
-					else if(flexLeft && flexWidth && flexRight){
-						if(group.shapeKO.getWidth() + diffX/3 > group.originalSize.width){
-							group.editShape({'width': group.shapeKO.getWidth() + diffX/3} );
-							group.ko.setX(group.ko.x() + diffX/3 );
+						//7
+						else if(flexLeft && flexWidth && flexRight){
+							if(group.shapeKO.getWidth() + diffX/3 > group.originalSize.width){
+								group.editShape({'width': group.shapeKO.getWidth() + diffX/3} );
+								group.ko.setX(group.ko.x() + diffX/3 );
+							}
 						}
-					}
 
-					//height
-					//8
-					if(flexTop && !flexHeight && !flexBottom){
-						group.ko.setY(group.ko.y() + diffY );
-					}
-					//16
-					else if(!flexTop && flexHeight && !flexBottom){
-						if(group.shapeKO.getHeight() + diffY > group.originalSize.height){
-							group.editShape({'height': group.shapeKO.getHeight() + diffY} );
-							group.ko.setY(group.ko.y() + diffY/2 );	
+						//height
+						//8
+						if(flexTop && !flexHeight && !flexBottom){
+							group.ko.setY(group.ko.y() + diffY );
 						}
-					}
-					//24
-					else if(flexTop && flexHeight && !flexBottom){
-						if(group.shapeKO.getHeight() + diffY/2 > group.originalSize.height){
-							group.editShape({'height': group.shapeKO.getHeight() + diffY/2} );
+						//16
+						else if(!flexTop && flexHeight && !flexBottom){
+							if(group.shapeKO.getHeight() + diffY > group.originalSize.height){
+								group.editShape({'height': group.shapeKO.getHeight() + diffY} );
+								group.ko.setY(group.ko.y() + diffY/2 );	
+							}
+						}
+						//24
+						else if(flexTop && flexHeight && !flexBottom){
+							if(group.shapeKO.getHeight() + diffY/2 > group.originalSize.height){
+								group.editShape({'height': group.shapeKO.getHeight() + diffY/2} );
+								group.ko.setY(group.ko.y() + diffY/2 );
+							}
+						}
+						//32 = default behaviour				
+						//40
+						else if(flexTop && !flexHeight && flexBottom){
 							group.ko.setY(group.ko.y() + diffY/2 );
 						}
-					}
-					//32 = default behaviour				
-					//40
-					else if(flexTop && !flexHeight && flexBottom){
-						group.ko.setY(group.ko.y() + diffY/2 );
-					}
-					//48
-					else if(!flexTop && flexHeight && flexBottom){
-						if(group.shapeKO.getHeight() + diffY/2 > group.originalSize.height){
-							group.editShape({'height': group.shapeKO.getHeight() + diffY/2} );
-							group.ko.setY(group.ko.y() + diffY/4 );
+						//48
+						else if(!flexTop && flexHeight && flexBottom){
+							if(group.shapeKO.getHeight() + diffY/2 > group.originalSize.height){
+								group.editShape({'height': group.shapeKO.getHeight() + diffY/2} );
+								group.ko.setY(group.ko.y() + diffY/4 );
+							}
 						}
-					}
-					//56
-					else if(flexTop && flexHeight && flexBottom){
-						if(group.shapeKO.getHeight() + diffY/3 > group.originalSize.height){
-							group.editShape({'height': group.shapeKO.getHeight() + diffY/3} );
-							group.ko.setY(group.ko.y() + diffY/3 );
+						//56
+						else if(flexTop && flexHeight && flexBottom){
+							if(group.shapeKO.getHeight() + diffY/3 > group.originalSize.height){
+								group.editShape({'height': group.shapeKO.getHeight() + diffY/3} );
+								group.ko.setY(group.ko.y() + diffY/3 );
+							}
 						}
-					}
-				};
-				if(group.getMainNode())
-				 	group.scaleMainNode(diffX, diffY);
-				if (group.hasOwnProperty('subgroups')) {
-					for(var i = 0; i < group.subgroups.length; i++){
-						this.groupScale(group.subgroups[i], diffX, diffY);
+					};
+					if(group.getMainNode())
+					 	group.scaleMainNode(diffX, diffY);
+					if (group.hasOwnProperty('subgroups')) {
+						for(var i = 0; i < group.subgroups.length; i++){
+							this.groupScale(group.subgroups[i], diffX, diffY);
+						}
 					}
 				}
 			};
@@ -1200,7 +1482,7 @@
 	if(typeof define === "function" && define.amd) {
 		// AMD
 		//"rgbcolor", "canvg"
-		define("sandbox", ["jquery", "kinetic", "p"], function($, Kinetic) { return factory($, Kinetic); });
+		define("sandbox", ["jquery", "kinetic", "p", "underscore"], function($, Kinetic) { return factory($, Kinetic); });
 	}
 	else {
 		// Global
