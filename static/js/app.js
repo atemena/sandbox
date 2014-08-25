@@ -28,10 +28,9 @@ function( sandbox, kinetic, bootstrapCP, bootstrapS, jqueryKnob, p, recentPins, 
 		{name:'Rosario',family:'Rosario:400,700:latin'},
 		{name:'Pathway Gothic One',family:'Pathway+Gothic+One::latin'}];
 	canvas = new sandbox("canvasSB", 400, 300);
-	canvas.loadFonts("fontSelect", fontSelected);
 	//canvas.setBackgroundBorder('black', 4);
 	window.canvas = canvas;
-	canvas.load(image2);
+	//canvas.scale()
 	//canvas.hideButtons();
 
 	
@@ -49,21 +48,21 @@ function( sandbox, kinetic, bootstrapCP, bootstrapS, jqueryKnob, p, recentPins, 
 
 		//canvas
 		var canvasH= $('#height').slider({
-			min: 10,
-			max: 100,
+			min: 100,
+			max: 1000,
 			orientation: 'horizontal',
 			value: 400
 		}).on('slide', function(ev){
-			canvas.selectedGroup.shapeGradient({'startPoint':{'x': ev.value}});
+			canvas.scale(canvas.stage.getWidth(), ev.value);
 		}).data('slider');
 
 		var canvasW= $('#width').slider({
-			min: 10,
-			max: 100,
+			min: 100,
+			max: 1000,
 			orientation: 'horizontal',
 			value: 300
 		}).on('slide', function(ev){
-			canvas.selectedGroup.shapeGradient({'startPoint':{'y': ev.value}});
+			canvas.scale(ev.value, canvas.stage.getHeight());
 		}).data('slider');
 
 		$('#bgColor').colorpicker({format:"rgba"}).on('changeColor', function(ev){
@@ -94,7 +93,7 @@ function( sandbox, kinetic, bootstrapCP, bootstrapS, jqueryKnob, p, recentPins, 
 		}).data('slider'); 
 
 		//shapes
-		/*var shapeH= $('#shapeH').slider({
+		var shapeH= $('#shapeH').slider({
 			min: 10,
 			max: 1000,
 			orientation: 'horizontal',
@@ -108,26 +107,7 @@ function( sandbox, kinetic, bootstrapCP, bootstrapS, jqueryKnob, p, recentPins, 
 			orientation: 'horizontal',
 		}).on('slide', function(ev){
 			canvas.selectedGroup.editShape({'width':ev.value});
-		}).data('slider');*/
-
-
-		//shapes
-		var shapeH= $('#shapeH').slider({
-			min: 10,
-			max: 100,
-			orientation: 'horizontal',
-		}).on('slide', function(ev){
-			canvas.selectedGroup.shapeGradient({'endPoint':{'x': ev.value}});
 		}).data('slider');
-
-		var shapeW= $('#shapeW').slider({
-			min: 10,
-			max: 100,
-			orientation: 'horizontal',
-		}).on('slide', function(ev){
-			canvas.selectedGroup.shapeGradient({'endPoint':{'x': ev.value}});
-		}).data('slider');
-
 
 		$('#fillColor').colorpicker({format:"rgba", color:'rgba(0,0,0,1)'}).on('changeColor', function(ev){
 		  canvas.selectedGroup.editShape({'fill': toRGBAString(ev.color.toRGB())});
@@ -217,10 +197,12 @@ function( sandbox, kinetic, bootstrapCP, bootstrapS, jqueryKnob, p, recentPins, 
 	});
 	$("#ellipse").click(function() {
 		if(canvas.selectedGroup){
-			canvas.selectedGroup.curve = -1;
-			canvas.selectedGroup.color = 'rgba(0,0,0,0.5)';
-			canvas.selectedGroup.rect = { 'width' : 'auto', 'height' : 'auto', 'x' : 'auto', 'y' : 'auto'};
-			canvas.addShape(canvas.selectedGroup);
+			var group = {}
+			group.curve = -1;
+			group.color = 'rgba(0,0,0,0.5)';
+			group.rect = { 'width' : 'auto', 'height' : 'auto', 'x' : 'auto', 'y' : 'auto'};
+			group.gradient = {'colors':['white','black'], 'direction':'linear-vertical', 'colorStops':[0,1]};
+			canvas.addShape(group);
 		}else{
 			canvas.addShape({'curve': -1, 'color':'rgba(0,0,0,0.5)', 'rect': {'width': canvas.stage.getWidth(), 'height': canvas.stage.getHeight(), 'x': 0, 'y':0}, 'resizingMask': 18});
 		}
@@ -230,11 +212,12 @@ function( sandbox, kinetic, bootstrapCP, bootstrapS, jqueryKnob, p, recentPins, 
 	});
 	$("#rectangle").click(function() {
 		if(canvas.selectedGroup){
-			canvas.selectedGroup.curve = 0;
-			canvas.selectedGroup.color = 'rgba(0,0,0,0.5)';
-			canvas.selectedGroup.rect = { 'width' : 'auto', 'height' : 'auto', 'x' : 'auto', 'y' : 'auto'};
-			canvas.selectedGroup.gradient = {'colors':['red','blue','yellow'], 'direction':'radial', 'colorStops':[0,0.25,1], 'startPoint':{'x':0, 'y':0}, 'endPoint':{'x':30, 'y':30}};
-			canvas.addShape(canvas.selectedGroup);
+			var group = {}
+			group.curve = 0;
+			group.color = 'rgba(0,0,0,0.5)';
+			group.rect = { 'width' : 'auto', 'height' : 'auto', 'x' : 'auto', 'y' : 'auto'};
+			group.gradient = {'colors':['white','black'], 'direction':'linear-horizontal', 'colorStops':[0,1]};
+			canvas.addShape(group);
 		}else{
 			canvas.addShape({'curve': 0, 'color':'rgba(0,0,0,0.5)', 'rect': {'width': canvas.stage.getWidth(), 'height': canvas.stage.getHeight(), 'x': 0, 'y': 0}, 'resizingMask': 18});
 		}
@@ -257,6 +240,8 @@ function( sandbox, kinetic, bootstrapCP, bootstrapS, jqueryKnob, p, recentPins, 
 	$("#delete").click(function(){
 		canvas.selectedGroup.delete();
 	})
-
+	
+	canvas.loadFonts("fontSelect", fontSelected);
+	canvas.load(image2);
 	
 })
