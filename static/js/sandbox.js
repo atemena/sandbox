@@ -659,7 +659,15 @@
 			    	x = parseInt(x).toString(16);
 			    	return (x.length==1) ? "0"+x : x;
 				});
-				return "0x"+b.join(""); 
+				return "#"+b.join(""); 
+			}
+
+			this.hexToRGBAString = function(hex, alpha){
+				if(hex[0] === '#'){
+					hex = hex.slice(1, hex.length);
+				}
+				return 'rgba(' + parseInt(hex.slice(0,2), 16) + ',' + parseInt(hex.slice(2,4), 16) + ','+ parseInt(hex.slice(4,6), 16)+ ',' + alpha + ')';
+				
 			}
 
 			this.loadImages = function(container, imageArray, click, format) {
@@ -1455,6 +1463,9 @@
 				this.addSubgroup(group);
 				var newGroup = this.selectedGroup;				
 				if(group.hasOwnProperty('color')){
+					//check if color is rgba or hex
+					if(newGroup.color[0] == '#')
+						newGroup.color = this.hexToRGBAString(newGroup.color, newGroup.alpha || 0);
 					this.addShape(newGroup);
 				}
 				if(group.hasOwnProperty('image')){

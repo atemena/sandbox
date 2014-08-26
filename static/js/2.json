@@ -17,7 +17,7 @@ image2 = {
 			},
 			"resizingMask" : 1,
 			"curve": 20,
-			"color": "rgba(0,0,255,1)",
+			"color": "#ffffff",
 			"text": {
 				"content": "Hello",
 				"color": "rgba(0,255,255,1)",
