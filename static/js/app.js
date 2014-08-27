@@ -213,8 +213,9 @@ function( sandbox, kinetic, bootstrapCP, bootstrapS, jqueryKnob, p, recentPins, 
 	$("#rectangle").click(function() {
 		if(canvas.selectedGroup){
 			var group = {}
-			group.curve = 0;
+			group.curve = 32;
 			group.color = 'rgba(0,0,0,0.5)';
+			group.alpha = 0.5;
 			group.rect = { 'width' : 'auto', 'height' : 'auto', 'x' : 'auto', 'y' : 'auto'};
 			group.gradient = {'colors':['white','black'], 'direction':'linear-horizontal', 'colorStops':[0,1]};
 			canvas.addShape(group);

@@ -35,6 +35,7 @@ image2 = {
 					"resizingMask" : 1,
 					"curve": 20,
 					"color": "rgba(0,0,255,1)",
+					"alpha":1,
 					"text": {
 						"content": "sub",
 						"color": "rgba(0,255,255,1)",
@@ -52,6 +53,7 @@ image2 = {
 							"resizingMask" : 1,
 							"curve": 2,
 							"color": "rgba(255,0,255,1)",
+					"alpha":1,
 							"text": {
 								"content": "sub",
 								"color": "rgba(0,0,255,1)",
@@ -71,6 +73,7 @@ image2 = {
 					"resizingMask" : 1,
 					"curve": 20,
 					"color": "rgba(0,125,255,1)",
+					"alpha":1,
 					"text": {
 						"content": "sub",
 						"color": "rgba(0,255,255,1)",
@@ -89,6 +92,7 @@ image2 = {
 			},
 			"curve": 20,
 			"resizingMask" : 2,
+					"alpha":1,
 			"color": "rgba(0,255,0,1)",
 			"text": {
 				"content": "Hello",
@@ -107,6 +111,7 @@ image2 = {
 			"resizingMask" : 3,
 			"curve": 20,
 			"color": "rgba(0,255,255,1)",
+					"alpha":1,
 			"text": {
 				"content": "Hello",
 				"color": "rgba(255,255,255,1)",
@@ -124,6 +129,7 @@ image2 = {
 			"resizingMask" : 4,
 			"curve": 20,
 			"color": "rgba(255,0,0,1)",
+					"alpha":1,
 			"text": {
 				"content": "Hello",
 				"color": "rgba(255,255,255,1)",
@@ -141,6 +147,7 @@ image2 = {
 			"resizingMask" : 5,
 			"curve": 20,
 			"color": "rgba(255,0,255,1)",
+					"alpha":1,
 			"text": {
 				"content": "Hello",
 				"color": "rgba(255,0,255,1)",
@@ -158,6 +165,7 @@ image2 = {
 			"resizingMask" : 6,
 			"curve": 20,
 			"color": "rgba(255,255,0,1)",
+					"alpha":1,
 			"text": {
 				"content": "Hello",
 				"color": "rgba(255,0,255,1)",
@@ -175,6 +183,7 @@ image2 = {
 			"resizingMask" : 7,
 			"curve": 20,
 			"color": "rgba(255,255,255,1)",
+					"alpha":1,
 			"text": {
 				"content": "Hello",
 				"color": "rgba(0,0,0,1)",
@@ -192,6 +201,7 @@ image2 = {
 			"resizingMask" : 8,
 			"curve": 20,
 			"color": "rgba(0,0,255,1)",
+					"alpha":1,
 			"text": {
 				"content": "Hello",
 				"color": "rgba(0,255,255,1)",
@@ -208,6 +218,7 @@ image2 = {
 			},
 			"curve": 20,
 			"resizingMask" : 16,
+					"alpha":1,
 			"color": "rgba(0,255,0,1)",
 			"text": {
 				"content": "Hello",
@@ -226,6 +237,7 @@ image2 = {
 			"resizingMask" : 24,
 			"curve": 20,
 			"color": "rgba(0,255,255,1)",
+					"alpha":1,
 			"text": {
 				"content": "Hello",
 				"color": "rgba(255,255,255,1)",
@@ -243,6 +255,7 @@ image2 = {
 			"resizingMask" : 32,
 			"curve": 20,
 			"color": "rgba(255,0,0,1)",
+					"alpha":1,
 			"text": {
 				"content": "Hello",
 				"color": "rgba(255,255,255,1)",
@@ -260,6 +273,7 @@ image2 = {
 			"resizingMask" : 40,
 			"curve": 20,
 			"color": "rgba(255,0,255,1)",
+					"alpha":1,
 			"text": {
 				"content": "Hello",
 				"color": "rgba(255,0,255,1)",
@@ -277,6 +291,7 @@ image2 = {
 			"resizingMask" : 48,
 			"curve": 20,
 			"color": "rgba(255,255,0,1)",
+					"alpha":1,
 			"text": {
 				"content": "Hello",
 				"color": "rgba(255,0,255,1)",
@@ -295,6 +310,7 @@ image2 = {
 			"resizingMask" : 54,
 			"curve": -1,
 			"color": "rgba(255,255,255,1)",
+					"alpha":1,
 			"image": {
 				"url": "http://proxy.shareroot.co/pinimg/150x150/7b/88/aa/7b88aa43b762ed3a398ac68b4963f42b.jpg",
 				"mode": "scaleToFill"

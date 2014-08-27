@@ -4,7 +4,7 @@
 
 	var Group = function(group){
 		this.rect = {'x':0, 'y':0,'width': 0, 'height': 0};
-		this.stroke = {'color': '#00000000', 'width':0};
+		this.stroke = {'color': '#00000000', 'width':0, 'alpha': 0};
 		this.color='#00000000';
 		this.gradient = {'colors':[], 'direction':'none', 'colorStops':[], 'startX':0, 'startY':0, 'endX':0, 'endY':0};
 		this.padding = 0;
@@ -29,19 +29,17 @@
 		this.copyValues = function(group){
 			//shadow , rect , stroke, gradient-start and end point image and text
 			_.extend(this.rect, group.rect);
-			_.extend(this.shadow), group.shadow;
+			_.extend(this.shadow, group.shadow);
 			_.extend(this.gradient, group.gradient);
 			this.image.copyValues(group.image);
 			this.text.copyValues(group.text);
 			_.map(_.pairs(group), function(pair){
 				var key = pair[0];
 				var val = pair[1];
-				if(typeof val !== 'object' && key !== 'subgrous'){
+				if(typeof val !== 'object' && key !== 'subgroups'){
 					this[key] = val;
 				}
 			}, this);
-			console.log(group);
-			console.log(this);
 
 		};
 		
@@ -73,7 +71,7 @@
 			if(this.hasOwnProperty('shapeKO')){
 				this.color = this.shapeKO.fill();
 				this.rotation = this.shapeKO.rotation();
-				this.stroke = {'color':this.shapeKO.stroke(), 'width':this.shapeKO.strokeWidth()};
+				this.stroke = {'color':this.shapeKO.stroke(), 'width':this.shapeKO.strokeWidth(), 'stroke': this.shapeKO.strokeAlpha())};
 				this.alpha = this.shapeKO.fillAlpha();
 				this.shadow = {'horizontalOffset': this.shapeKO.shadowOffsetX(),
 				 			   'verticalOffset': this.shapeKO.shadowOffsetY(), 
@@ -128,6 +126,7 @@
 			this.rotate(this.rotation);
 			this.shapeKO.stroke(this.stroke.color)
 			this.shapeKO.strokeWidth(this.stroke.width);
+			this.shapeKO.strokeAlpha(this.stroke.alpha);
 			this.shapeKO.opacity(this.alpha);
 			this.shapeKO.shadowColor(this.shadow.color); 
 			this.shapeKO.shadowBlur(this.shadow.blur); 
@@ -204,9 +203,9 @@
 		};
 
 		this.shapeGradient = function(gradient){
-			
+			gradient = gradient || {};
 			if(this.hasOwnProperty('shapeKO')){
-				gradient = gradient || {}
+				_.extend(this, gradient);
 				//use underscore to make better use defaults or extend?
 				var direction = this.gradient.direction;
 				var startPointX = this.gradient.startX;
@@ -215,44 +214,32 @@
 				var endPointY = this.gradient.endY;
 				var colors = this.gradient.colors;
 				var stops = this.gradient.colorStops;
-				// use extend or default?
-				if(gradient.hasOwnProperty('direction'))
-					direction = gradient.direction;
-				if(gradient.hasOwnProperty('colors'))
-					colors = gradient.colors;
-				if(gradient.hasOwnProperty('colorStops'))
-					stops = gradient.colorStops;
 				var colorStops = []
 				for(var i = 0; i < colors.length && i < stops.length; i++){
 					colorStops.push(stops[i]);
 					colorStops.push(colors[i]);
 				}
 
-				var startAndEndPoints = [
-						[0, config.height/2, config.width, config.height/2], //linear horizontal rect
-						[config.width/2, 0, config.width/2, config.height],  //linear vertical rect
-						[-config.width/2, 0, config.width/2, 0], //linear horizontal ellipse
-						[0, -config.height/2, 0, config.height/2], //linear vertical ellipse
-						[config.width/2, config.height/2, config.width, config.height] //radial
-					];
-				//TODO: Fix this
-				if(!group.gradient.hasOwnProperty('startX') || !group.gradient.hasOwnProperty('startY') || !group.gradient.hasOwnProperty('endX') || !group.gradient.hasOwnProperty('endY')){
-					if(group.gradient.direction === 'linear-horizontal')
-						gradientType = 0;
-					if(group.gradient.direction === 'linear-vertical')
-						gradientType = 1;
-					if(config.curve === -1)
-						gradientType = gradientType + 2;
-					if(group.gradient.direction === 'radial')
-						gradientType = 4;
+				var startAndEndPoints = {
+					'linear-horizontal' : [0, this.shapeKO.getHeight()/2, this.shapeKO.getWidth(), this.shapeKO.getHeight()/2], //linear horizontal rect
+					'linear-vertical' : [this.shapeKO.getWidth()/2, 0, this.shapeKO.getWidth()/2, this.shapeKO.getHeight()],  //linear vertical rect
+					'linear-horizontal-circle' : [-this.shapeKO.getWidth()/2, 0, this.shapeKO.getWidth()/2, 0], //linear horizontal ellipse
+					'linear-vertical-circle' : [0, -this.shapeKO.getHeight()/2, 0, this.shapeKO.getHeight()/2], //linear vertical ellipse
+					'radial' : [this.shapeKO.getWidth()/2, this.shapeKO.getHeight()/2, this.shapeKO.getWidth(), this.shapeKO.getHeight()] //radial
+				};
+				
+				if(!gradient.hasOwnProperty('startX') || !gradient.hasOwnProperty('startY') || !gradient.hasOwnProperty('endX') || !gradient.hasOwnProperty('endY')){
+					var gradientType = direction;
+					if(this.curve === -1 && gradientType != 'radial')
+						gradientType = gradientType + "-circle";
 					startPointX = startAndEndPoints[gradientType][0];
 					startPointY = startAndEndPoints[gradientType][1];
 					endPointX = startAndEndPoints[gradientType][2];
 					endPointY = startAndEndPoints[gradientType][3];
 				}
-				if(direction === 'linear-vertical'){
-					this.shapeKO.fillLinearGradientStartPointX({'x': startPointX, 'y':startPointY});
-					this.shapeKO.fillLinearGradientEndPointX({'x': endPointX, 'y': endPointY});
+				if(direction === 'linear-vertical' || direction === 'linear-horizontal'){
+					this.shapeKO.fillLinearGradientStartPoint({'x': startPointX, 'y':startPointY});
+					this.shapeKO.fillLinearGradientEndPoint({'x': endPointX, 'y': endPointY});
 					this.shapeKO.fillLinearGradientColorStops(colorStops);
 					this.shapeKO.fillPriority('linear-gradient');
 				}else if (direction === 'radial') {
@@ -269,7 +256,6 @@
 		
 			}
 			canvas.mainLayer.batchDraw();
-			this.kineticToGroup();
 		};
 
 		this.shapeFill = function(color){
@@ -393,6 +379,7 @@
 				if(!config.hasOwnProperty('stroke')){
 					config.stroke = self.stroke.color;
 					config.strokeWidth = self.stroke.width;
+					config.strokeAlpha = self.stroke.alpha;
 				}
 				if(!config.hasOwnProperty('fill')){
 					config.fill = self.color;
@@ -438,7 +425,7 @@
 				if(fillPriority === 'color'){
 					this.shapeFill(config.fill);
 				}else if(fillPriority === 'linear-gradient' || fillPriority === 'radial-gradient'){
-					this.shapeGradient();
+					this.shapeGradient(config.gradient);
 				}
 				this.shapeKO.moveToBottom();
 				this.scaleMainNode(newShape.getWidth()-oldWidth, newShape.getHeight()-oldHeight);
@@ -447,7 +434,8 @@
 				this.shapeHeight = config.height;
 				this.color = config.fill;
 				this.stroke.color = config.stroke;
-				this.stroke.width = config.strokeWidth
+				this.stroke.width = config.strokeWidth;
+				this.stroke.alpha = config.strokeAlpha;
 				this.curve = config.curve;
 				this.shadow = {'horizontalOffset': config.shadowOffsetX, 
 									  'verticalOffset': config.shadowOffsetY, 
@@ -666,7 +654,7 @@
 				if(hex[0] === '#'){
 					hex = hex.slice(1, hex.length);
 				}
-				return 'rgba(' + parseInt(hex.slice(0,2), 16) + ',' + parseInt(hex.slice(2,4), 16) + ','+ parseInt(hex.slice(4,6), 16)+ ',' + alpha + ')';
+				return 'rgba(' + parseInt(hex.slice(0,2), 16) + ',' + parseInt(hex.slice(2,4), 16) + ','+ parseInt(hex.slice(4,6), 16)+ ',' + parseInt(hex.slice(6,8), 16) + ')';
 				
 			}
 
@@ -961,18 +949,16 @@
 					'fontFamily': 'Arial'
 				};
 				if (group.hasOwnProperty('text')){
-					if (group.text.hasOwnProperty('content'))
-						config.text = group.text.content;
-					if(group.text.hasOwnProperty('color'))
-						config.fill = group.text.color;
-					if(group.text.hasOwnProperty('size'))
-						config.fontSize = group.text.size;
-					if(group.text.hasOwnProperty('font'))
-						config.fontFamily = group.text.font;
-					if(group.text.hasOwnProperty('justification'))
-						config.align = group.text.justification;
-					if(group.text.hasOwnProperty('style'))
-						config.style = group.text.style;
+					var syntaxSwitch = {'content': 'text', 'color': 'fill', 'size': 'fontSize', 'font' : 'fontFamily', 'justification': 'align', 'style': 'style' };
+					_.map(_.pairs(group.text), function(pair){
+						var key = pair[0];
+						var val = pair[1];
+						if(typeof val !== 'object' && key !== 'subgroups'){
+							if(key === 'color')
+								key = 'fill';
+							config[syntaxSwitch[key]] = val;
+						}
+					});
 					if(group.hasOwnProperty('rect')){
 						if(group.rect.hasOwnProperty('width'))
 							config.x = group.rect.width/2;
@@ -1025,7 +1011,6 @@
 				self.selectedGroup.originalSize.height = textKO.getHeight();
 				self.selectedGroup.text.ko = textKO;
 				self.selectedGroup.kineticToGroup();
-				//self.selectedGroup.applyGroupValues();
 				self.mainLayer.batchDraw();
 			};
 
@@ -1041,28 +1026,32 @@
 					'curve': 0,
 					'fill': '#000000ff',
 					'stroke': '#ffffffff',
-					'padding': 0,
-					'resizingMask': 0
+					'strokeWidth': 1,
+					'padding': 10,
+					'resizingMask': 0,
+					'opacity': 1
 				};
-				//if(group){
-				if(group.hasOwnProperty('color'))
-					config.fill = group.color;
-				if(group.hasOwnProperty('curve'))
-					config.curve = group.curve;
-				if(group.hasOwnProperty('padding'))
-					config.padding = group.padding;
-				if(group.hasOwnProperty('rotation'))
-					config.rotation = group.rotation;
-				if (group.hasOwnProperty('resizingMask'))
-					config.resizingMask = group.resizingMask;
-				if(group.hasOwnProperty('alpha'))
-					config.alpha = group.alpha;
+				_.map(_.pairs(group), function(pair){
+					var key = pair[0];
+					var val = pair[1];
+					if(typeof val !== 'object' && key !== 'subgroups'){
+						if(key === 'color')
+							key = 'fill';
+						if(key === 'alpha')
+							key = 'opacity'
+						config[key] = val;
+					}
+				});
+				
 				if(group.hasOwnProperty('stroke')){
 					if (group.stroke.hasOwnProperty('color'))
 						config.stroke = group.stroke.color;
 					if (group.stroke.hasOwnProperty('width'))
-						config.width = group.stroke.width;
+						config.strokeWidth = group.stroke.width;
+					if (group.stroke.hasOwnProperty('alpha'))
+						config.strokeAlpha = group.stroke.alpha;
 				}
+
 				if(group.hasOwnProperty('rect')){
 					if(group.rect.hasOwnProperty('width')){
 						config.width = group.rect.width;
@@ -1075,6 +1064,7 @@
 							config.y = group.rect.height/2;
 					}
 				}
+
 				if(group.hasOwnProperty('shadow')){
 					if(group.shadow.hasOwnProperty('horizontalOffsetX'))
 						config.shadowOffsetX = group.shadow.horizontalOffsetX;
@@ -1086,8 +1076,6 @@
 						config.shadowColor = group.shadow.color;
 				}
 
-
-
 				if(!self.selectedGroup  || (self.selectedGroup.parent === 'root' && self.selectedGroup.shapeKO)){
 					self.addSubgroup();
 				}else if(self.selectedGroup.shapeKO){
@@ -1098,12 +1086,8 @@
 						config.width = self.selectedGroup.getMainNode().getWidth() + 2*self.selectedGroup.padding;
 						config.height = self.selectedGroup.getMainNode().getHeight();
 					}else{
-						var max = self.stage.getWidth() * .75;
-						var min = self.stage.getWidth() * .1;
-						config.width = Math.floor(Math.random() * (max - min) + min);
-						max = self.stage.getHeight() * .75;
-						min = self.stage.getHeight() * .1;
-						config.height = Math.floor(Math.random() * (max - min) + min);
+						config.width = Math.floor(Math.random() * ((self.stage.getWidth() * .75) - (self.stage.getWidth() * .1)) + (self.stage.getWidth() * .1));
+						config.height = Math.floor(Math.random() * ((self.stage.getHeight() * .75) - (self.stage.getHeight() * .1)) + (self.stage.getHeight() * .1));
 					}
 				}
 
@@ -1175,11 +1159,9 @@
 						}
 					}
 				}else{
-					//fix later
 					group.gradient = {};
 					group.gradient.direction = 'none';
 				}
-				console.log(config.width, config.height);
 				if (config.curve>=0){
 					shape = new Kinetic.Shape(self._extendConfig({
 						sceneFunc: function(context){
@@ -1234,19 +1216,13 @@
 				}
 
 				self.selectedGroup.copyValues(group);
-				//shape.setOffsetY(height/2);
 				
 				self.selectedGroup.originalSize.width = shape.getWidth();
 				self.selectedGroup.originalSize.height = shape.getHeight();
 
 				self.selectedGroup.shapeKO = shape;
-				/*
-				self.selectedGroup.curve = config.curve;
-				self.selectedGroup.resizingMask = config.resizingMask;
-				self.selectedGroup.gradient.direction = group.gradient.direction;*/
 				self.selectedGroup.kineticToGroup();
 				self.selectedGroup.updateMargins();
-				//apply shadow to group
 				self.relayer(self.selectedGroup);
 				self.mainLayer.batchDraw();			
 			};
