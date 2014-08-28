@@ -57,10 +57,10 @@ function( sandbox, kinetic, bootstrapCP, bootstrapS, jqueryKnob, p, recentPins, 
 		}).data('slider');
 
 		var canvasW= $('#width').slider({
-			min: 100,
+			min: 500,
 			max: 1000,
 			orientation: 'horizontal',
-			value: 300
+			value: 800
 		}).on('slide', function(ev){
 			canvas.scale(ev.value, canvas.stage.getHeight());
 		}).data('slider');

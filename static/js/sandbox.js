@@ -22,7 +22,7 @@
 		this.ko;
 		this.shapeKO;
 		this.parent;
-		this.originalSize = {'width': 0, 'height':0};
+		this.minimumSize = {'width': 0, 'height':0};
 		this.margins = {'left': 0, 'right': 0, 'top': 0, 'bottom': 0};
 
 		//copys values from another group object
@@ -71,45 +71,31 @@
 			if(this.hasOwnProperty('shapeKO')){
 				this.color = this.shapeKO.fill();
 				this.rotation = this.shapeKO.rotation();
-				this.stroke = {'color':this.shapeKO.stroke(), 'width':this.shapeKO.strokeWidth(), 'stroke': this.shapeKO.strokeAlpha())};
+				this.stroke = {'color':this.shapeKO.stroke(), 'width':this.shapeKO.strokeWidth(), 'stroke': this.shapeKO.strokeAlpha()};
 				this.alpha = this.shapeKO.fillAlpha();
-				this.shadow = {'horizontalOffset': this.shapeKO.shadowOffsetX(),
-				 			   'verticalOffset': this.shapeKO.shadowOffsetY(), 
-				 			   'blur': this.shapeKO.shadowBlur(), 
-				 			   'color': this.shapeKO.shadowColor() 
-				 			};	
+				this.shadow = {'horizontalOffset': this.shapeKO.shadowOffsetX(), 'verticalOffset': this.shapeKO.shadowOffsetY(), 'blur': this.shapeKO.shadowBlur(), 'color': this.shapeKO.shadowColor() };	
 				var colors = [];
 				var stops = [];
-				 if(this.shapeKO.fillPriority() === 'linear'){
-					var colorStops = this.shapeKO.fillLinearGradientColorStops();
-					for(var i = 0; i < this.shapeKO.fillLinearGradientColorStops().length; i++){
-						if (i%2 == 1)
-					 		colors.push(colorStops[i]);
-					 	else
-					 		stops.push(colorStops[i]);
-					}
-					this.gradient.colors = colors; 
-					this.gradient.colorStops = stops; 
+				var colorStops = this.shapeKO.fillLinearGradientColorStops();
+				for(var i = 0; i < this.shapeKO.fillLinearGradientColorStops().length; i++){
+					if (i%2 == 1)
+				 		colors.push(colorStops[i]);
+				 	else
+				 		stops.push(colorStops[i]);
+				}
+				this.gradient.colors = colors; 
+				this.gradient.colorStops = stops; 
+				if(this.shapeKO.fillPriority() === 'linear'){
 					this.gradient.startX = this.shapeKO.fillLinearGradientStartPoint().x;
 					this.gradient.startY = this.shapeKO.fillLinearGradientStartPoint().y;
 					this.gradient.endX = this.shapeKO.fillLinearGradientEndPoint().x;
 					this.gradient.endY = this.shapeKO.fillLinearGradientEndPoint().y;
 				}else if(this.shapeKO.fillPriority() === 'radial'){
-					var colorStops = this.shapeKO.fillRadialGradientColorStops();
-					for(var i = 0; i < this.shapeKO.fillRadialGradientColorStops().length; i++){
-						if (i%2 == 1)
-					 		colors.push(colorStops[i]);
-					 	else
-					 		stops.push(colorStops[i]);
-					}
-					this.gradient.colors = colors; 
-					this.gradient.colorStops = stops; 
 					this.gradient.startX = this.shapeKO.getWidth()/2;
 					this.gradient.startY = this.shapeKO.getHeight()/2;
 					this.gradient.endX = this.shapeKO.getWidth();
 					this.gradient.endY = this.shapeKO.getHeight();
 				}
-
 			}
 			if(this.getMainNode()){
 				if(this.getMainNode().getClassName() === 'Image')
@@ -130,8 +116,7 @@
 			this.shapeKO.opacity(this.alpha);
 			this.shapeKO.shadowColor(this.shadow.color); 
 			this.shapeKO.shadowBlur(this.shadow.blur); 
-			this.shapeKO.shadowOffsetX(this.shadow.horizontalOffset);
-			this.shapeKO.shadowOffsetY(this.shadow.verticalOffset);  
+			this.shapeKO.shadowOffsetX({'x': this.shadow.horizontalOffset, 'y': this.shadow.verticalOffset);
 		};
 
 		this.rotate = function(rotation){
@@ -142,14 +127,12 @@
 					this.getMainNode().setRotationDeg(parseFloat(rotation));
 				if (this.hasOwnProperty('shapeKO'))
 					this.shapeKO.setRotationDeg(parseFloat(rotation));
+				for(var i = 0; i < this.subgroups.length; i++){ this.subgroups[i].rotate(rotation); }
 				this.rotation = rotation;
-				for(var i = 0; i < this.subgroups.length; i++){
-					this.subgroups[i].rotate(rotation);
-				}
 				canvas.mainLayer.batchDraw();
 			}
-			
 		};
+
 		this.resizeShape = function(){
 			if(canvas.autoSize == true && this.hasOwnProperty('shapeKO') && this.getMainNode())
 				this.editShape({'width': this.getMainNode().getWidth() + this.padding, 'height': this.getMainNode().getHeight()});
@@ -206,7 +189,6 @@
 			gradient = gradient || {};
 			if(this.hasOwnProperty('shapeKO')){
 				_.extend(this, gradient);
-				//use underscore to make better use defaults or extend?
 				var direction = this.gradient.direction;
 				var startPointX = this.gradient.startX;
 				var startPointY = this.gradient.startY;
@@ -265,8 +247,8 @@
 			if(typeof color === 'string')
 				this.shapeKO.fill(fill);
 		};
-
-		this.shapeShadow = function(){
+		/*not used?
+		this.shapeShadow = function(config){
 
 			if(!config.hasOwnProperty('shadow')){
 				config.shadowOffsetX = self.shadow.horizontalOffset;
@@ -284,7 +266,7 @@
 					config.shadowColor = self.shadow.color;
 			}
 		};
-
+		*/
 
 		this.vcenter = function() {
 			if(this.selectedGroup.ko.getParent().getClassName() === 'Group' ){
@@ -320,16 +302,13 @@
 
 
 		this.shadowEdit = function(s){
-			var node = false;
+			var node = this.getMainNode();
 			if(this.hasOwnProperty('shapeKO')){
-				node = this.shapeKO;
-				if(this.getMainNode()){
-					this.getMainNode().shadowOpacity(0);
-					this.getMainNode().shadowOffsetX(0);
-					this.getMainNode().shadowOffsetY(0);
-				}	
-			}else{
-				node = this.getMainNode();
+				if(node){
+					node.shadowOpacity(0);
+					node.shadowOffset({'x':0, 'y':0);
+				}
+				node = this.shapeKO;	
 			}
 			if(node){
 				if(s.hasOwnProperty('color'))
@@ -342,11 +321,7 @@
 					node.shadowOffsetY(s.verticalOffsetY);
 				if(s.hasOwnProperty('opacity'))
 					node.shadowOpacity(s.opacity);
-				this.shadow = {'horizontalOffset': node.shadowOffsetX(), 
-							   'verticalOffset': node.shadowOffsetY(), 
-							   'blur': node.shadowBlur(), 
-							   'color': node.shadowColor()
-							  };
+				this.shadow = {'horizontalOffset': node.shadowOffsetX(), 'verticalOffset': node.shadowOffsetY(), 'blur': node.shadowBlur(), 'color': node.shadowColor()};
 			}
 			canvas.mainLayer.batchDraw();
 		};
@@ -383,6 +358,7 @@
 				}
 				if(!config.hasOwnProperty('fill')){
 					config.fill = self.color;
+					this.shapeKO.fillPriority('color');
 				}
 				
 				if (config.curve>=0){
@@ -851,8 +827,8 @@
 				//replace with one call to copy values and update rect
 				//vvvv
 					//group.updateRect();
-					group.originalSize.width = imageKO.getWidth();
-					group.originalSize.height = imageKO.getHeight();
+					//group.minimumSize.width = imageKO.getWidth();
+					//group.minimumSize.height = imageKO.getHeight();
 					if(config.hasOwnProperty('mode'))
 						group.image.mode = config.mode;
 					group.image.url = newImage.src;
@@ -1007,8 +983,8 @@
 					textKO.shadowOpacity(0);
 
 
-				self.selectedGroup.originalSize.width = textKO.getWidth();
-				self.selectedGroup.originalSize.height = textKO.getHeight();
+				//self.selectedGroup.minimumSize.width = textKO.getWidth();
+				//self.selectedGroup.minimumSize.height = textKO.getHeight();
 				self.selectedGroup.text.ko = textKO;
 				self.selectedGroup.kineticToGroup();
 				self.mainLayer.batchDraw();
@@ -1217,8 +1193,8 @@
 
 				self.selectedGroup.copyValues(group);
 				
-				self.selectedGroup.originalSize.width = shape.getWidth();
-				self.selectedGroup.originalSize.height = shape.getHeight();
+				self.selectedGroup.minimumSize.width = shape.getWidth();
+				self.selectedGroup.minimumSize.height = shape.getHeight();
 
 				self.selectedGroup.shapeKO = shape;
 				self.selectedGroup.kineticToGroup();
@@ -1336,6 +1312,9 @@
 					var flexTop = (group.resizingMask & 8)=== 8;
 					var flexHeight = (group.resizingMask & 16) === 16;
 					var flexBottom = (group.resizingMask & 32) === 32;
+					var gettingBigger = (diffX > 0);
+					var gettingSmaller = (diffX < 0);
+					var 
 					if(group.hasOwnProperty('shapeKO')){
 						var distanceLeft = group.shapeKO.getAbsolutePosition().x + group.shapeKO.getWidth()/2;
 						var distanceRight = this.stage.getWidth() - (group.shapeKO.getAbsolutePosition().x + group.shapeKO.getWidth()/2);
@@ -1349,16 +1328,18 @@
 						}
 						//2
 						else if(!flexLeft && flexWidth && !flexRight){
-							if(group.shapeKO.getWidth() + diffX > group.originalSize.width && (distanceRight >= group.margins.right || diffX < 0)){//&& distanceLeft <= group.margins.left && distanceRight >= group.margins.right 
+							if(group.shapeKO.getWidth() + diffX > group.minimumSize.width && (distanceRight >= group.margins.right || diffX < 0)){//&& distanceLeft <= group.margins.left && distanceRight >= group.margins.right 
 								group.editShape({'width': group.shapeKO.getWidth() + diffX} );
 								group.ko.setX(group.ko.x() + diffX/2 );	
 							}
 						}
 						//3
 						else if(flexLeft && flexWidth && !flexRight){
-							if(group.shapeKO.getWidth() + diffX/2 > group.originalSize.width && (distanceRight >= group.margins.right || diffX < 0)){//&& distanceRight>group.margins.right
+							if(group.shapeKO.getWidth() + diffX/2 > group.minimumSize.width && (distanceRight >= group.margins.right || diffX < 0)) {//
 								group.editShape({'width': group.shapeKO.getWidth() + diffX/2} );
-								group.ko.setX(group.ko.x() + diffX/2 );
+								group.ko.setX(group.ko.x() + diffX );
+							}else if(distanceRight >= group.margins.right || diffX < 0) {
+								group.ko.setX(group.ko.x()+diffX);
 							}
 						}
 						//4 = default behaviour				
@@ -1368,14 +1349,14 @@
 						}
 						//6
 						else if(!flexLeft && flexWidth && flexRight){
-							if(group.shapeKO.getWidth() + diffX/2 > group.originalSize.width ){//&& distanceLeft>group.margins.left
+							if(group.shapeKO.getWidth() + diffX/2 > group.minimumSize.width && (distanceRight >= group.margins.right || diffX < 0) ){//&& distanceLeft>=group.margins.left   && (distanceRight >= group.margins.right || diffX < 0) 
 								group.editShape({'width': group.shapeKO.getWidth() + diffX/2} );
 								group.ko.setX(group.ko.x() + diffX/4 );
 							}
 						}
 						//7
 						else if(flexLeft && flexWidth && flexRight){
-							if(group.shapeKO.getWidth() + diffX/3 > group.originalSize.width){
+							if(group.shapeKO.getWidth() + diffX/3 > group.minimumSize.width && (distanceRight >= group.margins.right || diffX < 0) ){
 								group.editShape({'width': group.shapeKO.getWidth() + diffX/3} );
 								group.ko.setX(group.ko.x() + diffX/3 );
 							}
@@ -1388,14 +1369,14 @@
 						}
 						//16
 						else if(!flexTop && flexHeight && !flexBottom ){
-							if(group.shapeKO.getHeight() + diffY > group.originalSize.height && (distanceBottom >= group.margins.bottom || diffX < 0)){ // && distanceBottom > group.margins.bottom && distanceTop > group.margins.top
+							if(group.shapeKO.getHeight() + diffY > group.minimumSize.height && (distanceBottom >= group.margins.bottom || diffY < 0)){ // 
 								group.editShape({'height': group.shapeKO.getHeight() + diffY} );
 								group.ko.setY(group.ko.y() + diffY/2 );	
 							}
 						}
 						//24
 						else if(flexTop && flexHeight && !flexBottom ){//&& distanceBottom > group.margins.bottom
-							if(group.shapeKO.getHeight() + diffY/2 > group.originalSize.height  && (distanceBottom >= group.margins.bottom || diffX < 0)){
+							if(group.shapeKO.getHeight() + diffY/2 > group.minimumSize.height){ //&& (distanceBottom >= group.margins.bottom || diffX < 0)
 								group.editShape({'height': group.shapeKO.getHeight() + diffY/2} );
 								group.ko.setY(group.ko.y() + diffY/2 );
 							}
@@ -1407,14 +1388,14 @@
 						}
 						//48
 						else if(!flexTop && flexHeight && flexBottom ){//&& distanceTop > group.margins.top
-							if(group.shapeKO.getHeight() + diffY/2 > group.originalSize.height){
+							if(group.shapeKO.getHeight() + diffY/2 > group.minimumSize.height){
 								group.editShape({'height': group.shapeKO.getHeight() + diffY/2} );
 								group.ko.setY(group.ko.y() + diffY/4 );
 							}
 						}
 						//56
 						else if(flexTop && flexHeight && flexBottom){
-							if(group.shapeKO.getHeight() + diffY/3 > group.originalSize.height){
+							if(group.shapeKO.getHeight() + diffY/3 > group.minimumSize.height){
 								group.editShape({'height': group.shapeKO.getHeight() + diffY/3} );
 								group.ko.setY(group.ko.y() + diffY/3 );
 							}
@@ -1431,7 +1412,7 @@
 			};
 
 			this.save=function(){
-				//go through each node delete all kinetic objects
+				//go through each node, delete all temporary variables, convert colors to rgba hex and send as a json
 			};
 
 			//takes in an array of groups and renders them into the canvas
@@ -1439,7 +1420,6 @@
 				this.addSubgroup(group);
 				var newGroup = this.selectedGroup;				
 				if(group.hasOwnProperty('color')){
-					//check if color is rgba or hex
 					if(newGroup.color[0] == '#')
 						newGroup.color = this.hexToRGBAString(newGroup.color, newGroup.alpha || 0);
 					this.addShape(newGroup);
