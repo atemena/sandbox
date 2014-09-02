@@ -1308,17 +1308,28 @@
 						this.groupScale(this.rootGroup, diffX, diffY);
 			};
 
-			this.checkForMinWidth(group){
+			this.checkForMinWidth=function(group){
 				var changeWidth = true
-				if(group.shapeKO.getWidth() <= 20 || group.shapeKO.getWidth() <= group.curve*2){
-					return false;
-				}else{
-					changeWidth = 
+				if(group.hasOwnProperty('shapeKO')){
+					if(group.shapeKO.getWidth() <= 20 || group.shapeKO.getWidth() <= group.curve*2){
+						return false;
+					}else{
+						if(group.hasOwnProperty('subgroups')) {
+							for(var i = 0; i < group.subgroups.length; i++){
+								if(!this.checkForMinWidth(group.subgroups[i]))
+									return false;
+							}
+						}
+						return true;
+					}
 				}
 			}
-			this.checkForMinWidth(height){
+
+			this.checkForMinHeight=function(height){
 
 			}
+
+			this.calculateReachMin
 
 			this.groupScale = function(group, diffX, diffY){
 				//group.resizingMask
