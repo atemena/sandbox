@@ -1,43 +1,7 @@
 // sandbox.js - creates a Kinetic stage for allowing the user to manipulate backgrounds, stickers, and text
 (function(){
 	"use strict";
-	var Img = function(){
-		this.ko;
-		this.imageId;
-		this.url;
-		this.tint = 'none';
-		this.mode = 'scaleAspectFit';
-		this.copyValues = function(img){
-			_.extend(this, img);
-			
-		};
-		this.kineticToImg = function(){
-			this.url = this.ko.getImage().src;
-		};
-	};
 
-	var Txt = function(){
-		this.ko;
-		this.content = 'preview';
-		this.color = 'rgba(0,0,0,1)';
-		this.size = 32;
-		this.font = 'News Cycle';
-		this.justification = 'center';
-		this.style;
-		this.copyValues = function(txt){
-			var before;
-			_.extend(this, txt);
-			var after;
-		};
-		this.kineticToTxt = function(){
-			this.content = this.ko.getText();
-			this.color = this.ko.fill();
-			this.size = this.ko.fontSize();
-			this.font = this.ko.fontFamily();
-			this.justification = this.ko.align();
-			this.style = this.ko.fontStyle();
-		};
-	};
 	var Group = function(group){
 		this.rect = {'x':0, 'y':0,'width': 0, 'height': 0};
 		this.stroke = {'color': '#00000000', 'width':0, 'alpha': 0};
@@ -99,7 +63,6 @@
 		this.setImageMode = function(imageMode){
 			if (imageMode === 'center' || imageMode === 'scaleToFill' || imageMode === 'scaleAspectFit') // support for scaleAspectFill coming soon
 				this.image.mode = imageMode;
-			//resizeMainNode
 		}
 
 		//updates values of group to match the kinetic object
@@ -158,47 +121,29 @@
 			this.shapeKO.shadowOffset({'x': this.shadow.horizontalOffset, 'y': this.shadow.verticalOffset});
 		};
 
-		this.updateRect = function(){
-			this.rect.x = this.ko.x();
-			this.rect.y = this.ko.y();
-			var width;
-			if (this.hasOwnProperty('shapeKO'))
-				width = this.shapeKO.getWidth();
-			if (this.getMainNode()){
-				if (this.getMainNode().getWidth() > width)
-					width = this.getMainNode().getWidth();
-			}
-			if(!width)
-				width = this.rect.width;
-
-			var height;
-			if (this.hasOwnProperty('shapeKO'))
-				height = this.shapeKO.getHeight();
-			if (this.getMainNode()){
-				if (this.getMainNode().getHeight() > height)
-					height = this.getMainNode().getHeight();
-			}
-			if(!height)
-				height = this.rect.height;
-			if (this.rect.width != width || this.rect.height != height){
-				this.rect.width = width;
-				this.rect.height = height
+		this.rotate = function(rotation){
+			if(this.ko.getParent().getClassName() === 'Group' ){
+				if(!rotation)
+					rotation = 0;
+				if(this.getMainNode())
+					this.getMainNode().setRotationDeg(parseFloat(rotation));
+				if (this.hasOwnProperty('shapeKO'))
+					this.shapeKO.setRotationDeg(parseFloat(rotation));
+				for(var i = 0; i < this.subgroups.length; i++){ this.subgroups[i].rotate(rotation); }
+				this.rotation = rotation;
+				canvas.mainLayer.batchDraw();
 			}
 		};
 
-		this.updateMargins = function(){
-			this.margins.left = this.shapeKO.getAbsolutePosition().x - this.shapeKO.getWidth()/2;
-			this.margins.top = this.shapeKO.getAbsolutePosition().y - this.shapeKO.getHeight()/2;
-			this.margins.right = canvas.stage.getWidth()-(this.shapeKO.getAbsolutePosition().x + this.shapeKO.getWidth()/2);
-			this.margins.bottom = canvas.stage.getHeight()-(this.shapeKO.getAbsolutePosition().y + this.shapeKO.getHeight()/2);
+		this.resizeShape = function(){
+			if(canvas.autoSize == true && this.hasOwnProperty('shapeKO') && this.getMainNode())
+				this.editShape({'width': this.getMainNode().getWidth() + this.padding, 'height': this.getMainNode().getHeight()});
 		};
-
-
 
 		this.textColor = function(color){
 			if(this.text.ko){
-				this.text.color = color;
 				this.text.ko.fill(color);
+				this.text.color = color;
 				canvas.mainLayer.batchDraw();
 			}
 		};
@@ -239,15 +184,6 @@
 				this.text.ko.setOffsetY(this.text.ko.getHeight()/2);
 				this.resizeShape();
 				canvas.mainLayer.batchDraw();
-			}
-		};
-
-		this.resizeShape = function(){
-			if(canvas.autoSize == true && this.hasOwnProperty('shapeKO') && this.getMainNode()){
-				//this.rect.width = this.getMainNode().getWidth() + this.padding
-				//this.rect.height = this.getMainNode().getHeight()
-				//this.editShape()
-				this.editShape({'width': this.getMainNode().getWidth() + this.padding, 'height': this.getMainNode().getHeight()});
 			}
 		};
 
@@ -333,6 +269,40 @@
 			}
 		};
 		*/
+
+		this.vcenter = function() {
+			if(this.selectedGroup.ko.getParent().getClassName() === 'Group' ){
+				var stageHeight = canvas.stage.getHeight();
+				this.ko.setY(stageHeight/2);
+				this.rect.y = this.ko.y();
+				canvas.mainLayer.batchDraw();
+			}
+		};
+
+		this.hcenter = function() {
+			if(this.selectedGroup.ko.getParent().getClassName() === 'Group' ){
+				var stageWidth = canvas.stage.getWidth();
+				this.ko.setX(stageWidth/2);
+				this.rect.x = this.ko.x();
+				canvas.mainLayer.batchDraw();
+			}
+		};
+
+		this.moveUp = function() {
+			if(this.selectedGroup.ko.getParent().getClassName() === 'Group' ){
+				this.ko.moveUp();
+				canvas.mainLayer.batchDraw();
+			}
+		};
+
+		this.moveDown = function() {
+			if(this.selectedGroup.ko.getParent().getClassName() === 'Group' ){
+				this.ko.moveDown();
+				canvas.mainLayer.batchDraw();
+			}
+		};
+
+
 		this.shadowEdit = function(s){
 			var node = this.getMainNode();
 			if(this.hasOwnProperty('shapeKO')){
@@ -357,6 +327,21 @@
 			}
 			canvas.mainLayer.batchDraw();
 		};
+
+		this.editImage=function(img){
+			if(canvas.selectedGroup){
+				if(this.image.ko){
+					var image = new Image();
+					if(config.url.substr(0, 5) !== 'data:')
+						image.crossOrigin = "Anonymous";
+					image.src = config.url;
+					this.image.ko.setImage(image);
+					canvas.mainLayer.batchDraw();
+					this.resizeShape(); 
+				}
+			}
+		};
+
 
 		this.editShape=function(config){
 			//change to be able to create a new object as well
@@ -440,167 +425,39 @@
 			}
 		};
 
-		this.onImageLoad = function(args) {
-			var newImage = args[0];
-			var config = args[1];
-
-			var imageKO = new Kinetic.Image(canvas._extendConfig({
-				image: newImage,
-				x: 0,
-				y: 0,
-				draggable: false,
-			}, config));
-			
-			imageKO.offsetX(newImage.width/2);
-			imageKO.offsetY(newImage.height/2);
-
-			this.ko.add(imageKO);
-			if(this.parent === 'root'){
-				imageKO.setX(canvas.stage.getWidth()/2);
-				imageKO.setY(canvas.stage.getHeight()/2);
-			}else{
-				if(!this.hasOwnProperty('shapeKO') && config.x === 'auto' && config.y === 'auto'){
-					config = canvas.randomPos(imageKO);
-				}else if(config.x === 'auto' && config.y === 'auto'){
-					imageKO.setX(this.shapeKO.getWidth()/2);
-					imageKO.setY(this.shapeKO.getHeight()/2);
-				}
+		this.updateRect = function(){
+			this.rect.x = this.ko.x();
+			this.rect.y = this.ko.y();
+			var width;
+			if (this.hasOwnProperty('shapeKO'))
+				width = this.shapeKO.getWidth();
+			if (this.getMainNode()){
+				if (this.getMainNode().getWidth() > width)
+					width = this.getMainNode().getWidth();
 			}
-			
-			this.updateRect();
-			if(this.hasOwnProperty('shapeKO'))
-				imageKO.shadowOpacity(0);
-			this.image.ko = imageKO;
-			this.kineticToGroup();
-			canvas.relayer(this);
-			canvas.mainLayer.batchDraw();
-			this.resizeShape();
-		}
+			if(!width)
+				width = this.rect.width;
 
-		this.editImage = function(url){
-			if(!this.image.hasOwnProperty('ko')){
-				var self = this;
-				var newImage = new Image();
-				var config = {};
-				config.x = this.rect.width/2 || 'auto';
-				config.y = this.rect.height/2 || 'auto';
-				url = url || this.image.url;
-
-				if(typeof url !== 'string')
-					url = url.target.src;
-				newImage.onload = this.onImageLoad.bind(self, [newImage, config]);
-				if(url.substr(0, 5) !== 'data:')
-					newImage.crossOrigin = "Anonymous";
-				newImage.src = url;
-			}else{
-				var image = new Image();
-				if(url.substr(0, 5) !== 'data:')
-					image.crossOrigin = "Anonymous";
-				image.src = url;
-				this.image.ko.setImage(image);
-				canvas.mainLayer.batchDraw();
-				this.resizeShape();
-			} 
-		};
-
-		this.editText = function(){
-				var self = this;
-				var config = {};
-				
-				var syntaxSwitch = {'content': 'text', 'color': 'fill', 'size': 'fontSize', 'font' : 'fontFamily', 'justification': 'align', 'style': 'style' };
-				_.map(_.pairs(this.text), function(pair){
-					var key = pair[0];
-					var val = pair[1];
-					if(typeof val !== 'object' && key !== 'subgroups'){
-						//why ??? 
-						//if(key === 'color')
-						//	key = 'fill';
-						config[syntaxSwitch[key]] = val;
-					}
-				});
-				//TODO: check group.rect.width and height if not set 
-				config.x = this.rect.width/2 || 'auto';
-				config.y = this.rect.height/2 || 'auto';
-				config.shadowOffsetX = this.shadow.horizontalOffsetX || 0;
-				config.shadowOffsetY = this.shadow.verticalOffsetY || 0;
-				config.shadowBlur = this.shadow.blur || 0;
-				config.shadowColor = this.shadow.color || 0;
-
-				var textKO = new Kinetic.Text(canvas._extendConfig({
-					x: 0,
-					y: 0,
-					textBaseline: 'middle',
-					draggable: false
-				}, config));
-
-				this.ko.add(textKO);
-				textKO.setOffsetX(textKO.getWidth()/2);
-				textKO.setOffsetY(textKO.getHeight()/2);
-				if(this.parent === 'root'){
-					textKO.setX(canvas.stage.getWidth()/2);
-					textKO.setY(canvas.stage.getHeight()/2);
-				}else{
-					if(!this.hasOwnProperty('shapeKO') && config.x === 'auto' && config.y === 'auto'){
-						this.randomPos(textKO);
-					}else if(config.x === 'auto' && config.y === 'auto'){
-						textKO.setX(this.selectedGroup.shapeKO.getWidth()/2);
-						textKO.setY(this.selectedGroup.shapeKO.getHeight()/2);
-					}
-				}
-				if(this.hasOwnProperty('shapeKO'))
-					textKO.shadowOpacity(0);
-				//this.updateRect();
-				this.text.ko = textKO;
-				this.kineticToGroup();
-				canvas.mainLayer.batchDraw();
-				this.resizeShape();
-			};
-
-
-		this.rotate = function(rotation){
-			if(this.ko.getParent().getClassName() === 'Group' ){
-				if(!rotation)
-					rotation = 0;
-				if(this.getMainNode())
-					this.getMainNode().setRotationDeg(parseFloat(rotation));
-				if (this.hasOwnProperty('shapeKO'))
-					this.shapeKO.setRotationDeg(parseFloat(rotation));
-				for(var i = 0; i < this.subgroups.length; i++){ this.subgroups[i].rotate(rotation); }
-				this.rotation = rotation;
-				canvas.mainLayer.batchDraw();
+			var height;
+			if (this.hasOwnProperty('shapeKO'))
+				height = this.shapeKO.getHeight();
+			if (this.getMainNode()){
+				if (this.getMainNode().getHeight() > height)
+					height = this.getMainNode().getHeight();
+			}
+			if(!height)
+				height = this.rect.height;
+			if (this.rect.width != width || this.rect.height != height){
+				this.rect.width = width;
+				this.rect.height = height
 			}
 		};
 
-		this.vcenter = function() {
-			if(this.selectedGroup.ko.getParent().getClassName() === 'Group' ){
-				var stageHeight = canvas.stage.getHeight();
-				this.ko.setY(stageHeight/2);
-				this.rect.y = this.ko.y();
-				canvas.mainLayer.batchDraw();
-			}
-		};
-
-		this.hcenter = function() {
-			if(this.selectedGroup.ko.getParent().getClassName() === 'Group' ){
-				var stageWidth = canvas.stage.getWidth();
-				this.ko.setX(stageWidth/2);
-				this.rect.x = this.ko.x();
-				canvas.mainLayer.batchDraw();
-			}
-		};
-
-		this.moveUp = function() {
-			if(this.selectedGroup.ko.getParent().getClassName() === 'Group' ){
-				this.ko.moveUp();
-				canvas.mainLayer.batchDraw();
-			}
-		};
-
-		this.moveDown = function() {
-			if(this.selectedGroup.ko.getParent().getClassName() === 'Group' ){
-				this.ko.moveDown();
-				canvas.mainLayer.batchDraw();
-			}
+		this.updateMargins = function(){
+			this.margins.left = this.shapeKO.getAbsolutePosition().x - this.shapeKO.getWidth()/2;
+			this.margins.top = this.shapeKO.getAbsolutePosition().y - this.shapeKO.getHeight()/2;
+			this.margins.right = canvas.stage.getWidth()-(this.shapeKO.getAbsolutePosition().x + this.shapeKO.getWidth()/2);
+			this.margins.bottom = canvas.stage.getHeight()-(this.shapeKO.getAbsolutePosition().y + this.shapeKO.getHeight()/2);
 		};
 
 		this.getMainNode=function(group){
@@ -692,7 +549,440 @@
 				}
 			}
 		}
+	};
 
+
+	// add defaults
+	var Img = function(){
+		this.ko;
+		this.imageId;
+		this.url;
+		this.tint = 'none';
+		this.mode = 'scaleAspectFit';
+		this.copyValues = function(img){
+			_.extend(this, img);
+			
+		};
+		this.kineticToImg = function(){
+			this.url = this.ko.getImage().src;
+		};
+	};
+
+	// add defaults
+	var Txt = function(){
+		this.ko;
+		this.content = 'preview';
+		this.color = 'rgba(0,0,0,1)';
+		this.size = 32;
+		this.font = 'News Cycle';
+		this.justification = 'center';
+		this.style;
+		this.copyValues = function(txt){
+			var before;
+			_.extend(this, txt);
+			var after;
+		};
+		this.kineticToTxt = function(){
+			this.content = this.ko.getText();
+			this.color = this.ko.fill();
+			this.size = this.ko.fontSize();
+			this.font = this.ko.fontFamily();
+			this.justification = this.ko.align();
+			this.style = this.ko.fontStyle();
+		};
+	};
+
+	var factory = function($, Kinetic){
+		return function(container, width, height, config) {
+			if(!config)
+				config = {};
+			config.container = container;
+			config.width = width;
+			config.height = height;
+			this.stage = new Kinetic.Stage(config);
+			this.mainLayer = new Kinetic.Layer();
+			this.border = new Kinetic.Rect({
+					x: 0,
+					y: 0,
+					width: this.stage.attrs.width,
+					height: this.stage.attrs.height,
+					stroke: 'black',
+					strokeWidth: 1
+			})
+			this.rootGroup;
+			this.mainLayer.add(this.border);
+			this.stage.add(this.mainLayer);
+			this.mainLayer.batchDraw();
+			this.selectedGroup;
+			this.secondaryGroups = [];
+			this.autoSize = true;
+
+			this.rgbaStringToHex = function(rgbaString){
+				var a = rgbaString.split("(")[1].split(")")[0];
+				a = a.split(",");
+				var b = a.map(function(x){
+			    	x = parseInt(x).toString(16);
+			    	return (x.length==1) ? "0"+x : x;
+				});
+				return "#"+b.join(""); 
+			}
+
+			this.hexToRGBAString = function(hex, alpha){
+				if(hex[0] === '#'){
+					hex = hex.slice(1, hex.length);
+				}
+				return 'rgba(' + parseInt(hex.slice(0,2), 16) + ',' + parseInt(hex.slice(2,4), 16) + ','+ parseInt(hex.slice(4,6), 16)+ ',' + parseInt(hex.slice(6,8), 16) + ')';
+				
+			}
+
+			this.loadImages = function(container, imageArray, click, format) {
+				var i;
+				if(typeof container === 'string')
+					container = document.getElementById(container);
+				for(i = 0; i < imageArray.length; i++) {
+					if(format) {
+						var div = document.createElement('div');
+						var code = format.replace(/%url/g, imageArray[i].url).replace(/%caption/g, imageArray[i].caption);
+						div.innerHTML = code;
+						var len = div.childNodes.length;
+						for(var j = 0; j < len; ++j)
+							container.appendChild(div.childNodes[0]);
+					}
+					else {
+						var img = document.createElement("img");
+						var br = document.createElement('br');
+						var br2 = document.createElement('br');
+						img.src = imageArray[i].url;
+						img.style.width = width/2 + 'px';
+						img.style.cursor = "pointer";
+						container.appendChild(img);
+						container.appendChild(br);
+						container.appendChild(br2);
+					}
+				}
+				var images = container.getElementsByTagName('img');
+				for(i = 0; i < images.length; ++i)
+					images[i].addEventListener('click', this._createEventListener(click));
+			};
+
+			this.loadFonts = function(selectContainer, fontArray) {
+				if(typeof selectContainer === 'string')
+					selectContainer = document.getElementById(selectContainer);
+				var families = [];
+				for(var i = 0; i < fontArray.length; ++i)
+					families.push(fontArray[i].family);
+				window.WebFontConfig = {
+					google: { families: families },
+					loading: function() { if(selectContainer) { selectContainer.disabled = true; $(selectContainer).html('<option>Loading...</option>'); } },
+					active: function() {
+						if(selectContainer) {
+							$(selectContainer).empty();
+							for(var i = 0; i < fontArray.length; ++i) {
+								var option = document.createElement('option');
+								option.value = fontArray[i].name;
+								option.textContent = fontArray[i].name;
+								option.style.fontFamily = fontArray[i].name;
+								$(selectContainer).append(option);
+							}
+							selectContainer.disabled = false;
+						}
+					}
+					//inactive: function() {},
+					//fontloading: function(familyName, fvd) {},
+					//fontactive: function(familyName, fvd) {},
+					//fontinactive: function(familyName, fvd) {}
+				};
+				(function() {
+					var wf = document.createElement('script');
+					wf.src = ('https:' === document.location.protocol ? 'https' : 'http') + '://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js';
+					wf.type = 'text/javascript';
+					var s = document.getElementsByTagName('script')[0];
+					s.parentNode.insertBefore(wf, s);
+				})();
+			};
+
+			this._selectGroup = function(group){
+				if(this.selectedGroup !== group) {
+					this.selectedGroup = group;
+					//this.updateContext();
+				}
+			};
+
+			this._addToSelected = function(group){
+				for(var i=0; i< secondaryGroups.length; i++){
+					if(secondaryGroups[i] !== group){
+						secondaryGroups.append(group);
+						break;
+						//this.updateContext();
+					}
+				}
+			};
+
+			this._extendConfig = function(config, userConfig) {
+				if(userConfig) {
+					for(var property in userConfig) {
+						if(userConfig.hasOwnProperty(property))
+							config[property] = userConfig[property];
+					}
+				}
+				return config;
+			};
+
+			this.addSubgroup = function(group){
+				var self = this;
+				var newGroup = new Group();
+				if(group){
+					newGroup.copyValues(group);
+				}
+				newGroup.ko = new Kinetic.Group({
+					draggable: true,
+					x: newGroup.rect.x,
+					y: newGroup.rect.y
+				});
+				if(self.hasOwnProperty('selectedGroup')){
+					self.selectedGroup.ko.add(newGroup.ko);
+					newGroup.parent = self.selectedGroup;
+					self.selectedGroup.subgroups.push(newGroup);
+					newGroup.ko.on('mouseup dragstart', function() { 
+						self._selectGroup(newGroup); 
+						newGroup.kineticToGroup();
+					});
+					newGroup.ko.on('mouseout', function() { document.body.style.cursor = 'auto'; });
+					newGroup.ko.on('mouseover', function() { document.body.style.cursor = 'move'; });
+				}else{
+					self.rootGroup = newGroup;
+					newGroup.ko.draggable(false);
+					if(newGroup.rect.width === 0){
+						newGroup.ko.setWidth(this.stage.getWidth()); 
+						newGroup.rect.width = this.stage.getWidth();
+					}
+					if(newGroup.rect.height === 0){
+						newGroup.ko.setHeight(this.stage.getHeight());
+						newGroup.rect.height = this.stage.getHeight();
+					}
+					self.mainLayer.add(newGroup.ko);
+					self.scale(newGroup.rect.width, newGroup.rect.height);
+					newGroup.parent = 'root';
+				}
+				self._selectGroup(newGroup);
+			};
+
+
+			this.addSiblingGroup = function(group){
+				var self = this;
+				var newGroup = new Group();
+				if(group){
+					newGroup.copyValues(group);
+				}
+				if(self.hasOwnProperty('selectedGroup')){
+					if(self.selectedGroup.ko.getParent().getClassName() === 'Group'){ // why check for parent with kinetic instead of group
+						newGroup.ko = new Kinetic.Group({
+							draggable: true,
+							x: newGroup.rect.x,
+							y: newGroup.rect.y
+						});
+						self.selectedGroup.ko.getParent().add(newGroup.ko);
+						self.selectedGroup.parent.subgroups.push(newGroup);
+						newGroup.parent = self.selectedGroup.parent;
+						newGroup.ko.on('mouseup dragstart', function() { 
+							self._selectGroup(newGroup); 
+							newGroup.kineticToGroup();
+						});
+						newGroup.ko.on('mouseout', function() { document.body.style.cursor = 'auto'; });
+						newGroup.ko.on('mouseover', function() { document.body.style.cursor = 'move'; });
+						self._selectGroup(newGroup);
+					}
+				}
+			};
+
+			this.onImageLoad = function(args) {
+				var group = args[0];
+				var newImage = args[1];
+				var config = args[2];
+
+				var imageKO = new Kinetic.Image(this._extendConfig({
+					image: newImage,
+					x: 0,
+					y: 0,
+					draggable: false,
+				}, config));
+				
+				imageKO.offsetX(newImage.width/2);
+				imageKO.offsetY(newImage.height/2);
+
+				group.ko.add(imageKO);
+				if(group.parent === 'root'){
+					imageKO.setX(this.stage.getWidth()/2);
+					imageKO.setY(this.stage.getHeight()/2);
+				}else{
+					if(!group.hasOwnProperty('shapeKO') && config.x === 'auto' && config.y === 'auto'){
+							config = this.randomPos(imageKO);
+					}else if(config.x === 'auto' && config.y === 'auto'){
+							imageKO.setX(group.shapeKO.getWidth()/2);
+							imageKO.setY(group.shapeKO.getHeight()/2);
+					}
+				}
+				
+				group.updateRect();
+				if(group.hasOwnProperty('shapeKO'))
+					imageKO.shadowOpacity(0);
+				group.image.mode = config.mode || 'scaleAspectFit';
+				group.image.url = newImage.src;
+				group.image.ko = imageKO;
+				group.kineticToGroup();
+				this.relayer(group);
+				this.mainLayer.batchDraw();
+			}
+
+			this.addImage = function(url, group){
+				var self = this;
+				var newImage = new Image();
+				var config = { x : 'auto', y : 'auto' };
+				if(group){
+					if(group.hasOwnProperty('rect')){
+						if(group.rect.hasOwnProperty('width'))
+							config.x = group.rect.width/2;
+						if(group.rect.hasOwnProperty('height'))
+							config.y = group.rect.height/2;
+					}
+					if(group.hasOwnProperty('image')){
+						if(group.image.hasOwnProperty('mode'))
+							config.mode = group.image.mode;
+					}
+				}
+
+				if(!self.selectedGroup || (self.selectedGroup.parent === 'root' && self.selectedGroup.getMainNode())){
+					self.addSubgroup();
+				}else if(self.selectedGroup.getMainNode() &&  self.selectedGroup.parent !== 'root'){
+					self.addSiblingGroup();
+				}
+				// In case of an event object
+				if(typeof url !== 'string')
+					url = url.target.src;
+				if(url.slice(-4) === '.svg' || url.substr(0, 26) === 'data:image/svg+xml;base64,') {
+					newImage.onload = function() {
+						if(url.substr(0, 26) === 'data:image/svg+xml;base64,')
+							url = atob(url.slice(26));
+						// The image is only required to get width/height of the picture
+						var svgShape = new Kinetic.Shape(self._extendConfig({
+							drawFunc: function (context) {
+								// Use the specific context, not the global one which doesn't have the drawSvg function
+								context = context._context;
+								context.shadowBlur = 4;
+								context.shadowOffsetY = 6;
+								context.shadowOffsetX = 6;
+								context.shadowColor = "rgba(0,0,0,0.3)";
+								context.drawSvg(url, 0, 0, newImage.width, newImage.height);
+							},
+							x: Math.floor(Math.random() * (325 - 75 + 1)) + 75,
+							y: Math.floor(Math.random() * (225 - 75 + 1)) + 75,
+							offset: {x: newImage.width/2, y: newImage.height/2 },
+							width: newImage.width,
+							height: newImage.height,
+							draggable: true,
+							drawHitFunc: function(context) {
+								context.beginPath();
+								context.moveTo(0, 0);
+								context.lineTo(newImage.width, 0);
+								context.lineTo(newImage.width, newImage.height);
+								context.lineTo(0, newImage.height);
+								context.lineTo(0, 0);
+								context.closePath();
+								context.fillStrokeShape(this);
+							}
+						}, config)); 
+						svgShape.on('mouseup dragstart', function() { self._selectNode(this); }); //call apply settings?
+						svgShape.on('mouseout', function() { document.body.style.cursor = 'auto'; });
+						svgShape.on('mouseover', function() { document.body.style.cursor = 'move'; });
+						self._selectNode(svgShape);
+						self.scale(1);
+						self.stickerLayer.add(svgShape);
+						self.stickerLayer.batchDraw();
+					};
+				}
+				else {
+					newImage.onload = this.onImageLoad.bind(self, [self.selectedGroup, newImage, config]);
+				}
+				if(url.substr(0, 5) !== 'data:')
+					newImage.crossOrigin = "Anonymous";
+				newImage.src = url;
+			};
+
+			this.addText = function(group){
+				var self = this;
+				var config = {
+					'x': 'auto',
+					'y': 'auto',
+					'text': "preview",
+					'fill': 'rgba(0,0,0,1)',
+					'fontSize': 32,
+					'fontFamily': 'Arial'
+				};
+				if (group.hasOwnProperty('text')){
+					var syntaxSwitch = {'content': 'text', 'color': 'fill', 'size': 'fontSize', 'font' : 'fontFamily', 'justification': 'align', 'style': 'style' };
+					_.map(_.pairs(group.text), function(pair){
+						var key = pair[0];
+						var val = pair[1];
+						if(typeof val !== 'object' && key !== 'subgroups'){
+							if(key === 'color')
+								key = 'fill';
+							config[syntaxSwitch[key]] = val;
+						}
+					});
+					if(group.hasOwnProperty('rect')){
+						if(group.rect.hasOwnProperty('width'))
+							config.x = group.rect.width/2;
+						if(group.rect.hasOwnProperty('height'))
+							config.y = group.rect.height/2;
+					}
+				}
+				if(group.hasOwnProperty('shadow')){
+					if(group.hasOwnProperty('horizontalOffsetX'))
+						config.shadowOffsetX = group.shadow.horizontalOffsetX;
+					if(group.hasOwnProperty('verticalOffsetY'))
+						config.shadowOffsetY = group.shadow.verticalOffsetY;
+					if(group.hasOwnProperty('blur'))
+						config.shadowBlur = group.shadow.blur;
+					if(group.hasOwnProperty('color'))
+						config.shadowColor = group.shadow.color;
+				}
+
+				if(!self.selectedGroup  || (self.selectedGroup.parent === 'root' && self.selectedGroup.getMainNode())){
+					self.addSubgroup();
+				}else if(self.selectedGroup.getMainNode()){
+					self.addSiblingGroup();
+				}
+				var textKO = new Kinetic.Text(self._extendConfig({
+					x: 0,
+					y: 0,
+					textBaseline: 'middle',
+					draggable: false
+				}, config));
+
+				self.selectedGroup.ko.add(textKO);
+				textKO.setOffsetX(textKO.getWidth()/2);
+				textKO.setOffsetY(textKO.getHeight()/2);
+				if(self.selectedGroup.parent === 'root'){
+					textKO.setX(self.stage.getWidth()/2);
+					textKO.setY(self.stage.getHeight()/2);
+				}else{
+					if(!self.selectedGroup.hasOwnProperty('shapeKO') && config.x === 'auto' && config.y === 'auto'){
+						self.randomPos(textKO);
+					}else if(config.x === 'auto' && config.y === 'auto'){
+						textKO.setX(self.selectedGroup.shapeKO.getWidth()/2);
+						textKO.setY(self.selectedGroup.shapeKO.getHeight()/2);
+					}
+				}
+				if(group.hasOwnProperty('shapeKO'))
+					textKO.shadowOpacity(0);
+
+
+				//self.selectedGroup.minimumSize.width = textKO.getWidth();
+				//self.selectedGroup.minimumSize.height = textKO.getHeight();
+				self.selectedGroup.text.ko = textKO;
+				self.selectedGroup.kineticToGroup();
+				self.mainLayer.batchDraw();
+			};
 
 			this.addShape = function(group){
 				var shape;
@@ -909,120 +1199,6 @@
 				self.relayer(self.selectedGroup);
 				self.mainLayer.batchDraw();			
 			};
-			
-
-
-	};
-
-	var factory = function($, Kinetic){
-		return function(container, width, height, config) {
-			if(!config)
-				config = {};
-			config.container = container;
-			config.width = width;
-			config.height = height;
-			this.stage = new Kinetic.Stage(config);
-			this.mainLayer = new Kinetic.Layer();
-			this.border = new Kinetic.Rect({
-					x: 0,
-					y: 0,
-					width: this.stage.attrs.width,
-					height: this.stage.attrs.height,
-					stroke: 'black',
-					strokeWidth: 1
-			})
-			this.rootGroup;
-			this.mainLayer.add(this.border);
-			this.stage.add(this.mainLayer);
-			this.mainLayer.batchDraw();
-			this.selectedGroup;
-			this.secondaryGroups = [];
-			this.autoSize = true;
-
-			this.rgbaStringToHex = function(rgbaString){
-				var a = rgbaString.split("(")[1].split(")")[0];
-				a = a.split(",");
-				var b = a.map(function(x){
-			    	x = parseInt(x).toString(16);
-			    	return (x.length==1) ? "0"+x : x;
-				});
-				return "#"+b.join(""); 
-			}
-
-			this.hexToRGBAString = function(hex, alpha){
-				if(hex[0] === '#'){
-					hex = hex.slice(1, hex.length);
-				}
-				return 'rgba(' + parseInt(hex.slice(0,2), 16) + ',' + parseInt(hex.slice(2,4), 16) + ','+ parseInt(hex.slice(4,6), 16)+ ',' + parseInt(hex.slice(6,8), 16) + ')';
-				
-			}
-
-			this.loadImages = function(container, imageArray, click, format) {
-				var i;
-				if(typeof container === 'string')
-					container = document.getElementById(container);
-				for(i = 0; i < imageArray.length; i++) {
-					if(format) {
-						var div = document.createElement('div');
-						var code = format.replace(/%url/g, imageArray[i].url).replace(/%caption/g, imageArray[i].caption);
-						div.innerHTML = code;
-						var len = div.childNodes.length;
-						for(var j = 0; j < len; ++j)
-							container.appendChild(div.childNodes[0]);
-					}
-					else {
-						var img = document.createElement("img");
-						var br = document.createElement('br');
-						var br2 = document.createElement('br');
-						img.src = imageArray[i].url;
-						img.style.width = width/2 + 'px';
-						img.style.cursor = "pointer";
-						container.appendChild(img);
-						container.appendChild(br);
-						container.appendChild(br2);
-					}
-				}
-				var images = container.getElementsByTagName('img');
-				for(i = 0; i < images.length; ++i)
-					images[i].addEventListener('click', this._createEventListener(click));
-			};
-
-			this.loadFonts = function(selectContainer, fontArray) {
-				if(typeof selectContainer === 'string')
-					selectContainer = document.getElementById(selectContainer);
-				var families = [];
-				for(var i = 0; i < fontArray.length; ++i)
-					families.push(fontArray[i].family);
-				window.WebFontConfig = {
-					google: { families: families },
-					loading: function() { if(selectContainer) { selectContainer.disabled = true; $(selectContainer).html('<option>Loading...</option>'); } },
-					active: function() {
-						if(selectContainer) {
-							$(selectContainer).empty();
-							for(var i = 0; i < fontArray.length; ++i) {
-								var option = document.createElement('option');
-								option.value = fontArray[i].name;
-								option.textContent = fontArray[i].name;
-								option.style.fontFamily = fontArray[i].name;
-								$(selectContainer).append(option);
-							}
-							selectContainer.disabled = false;
-						}
-					}
-					//inactive: function() {},
-					//fontloading: function(familyName, fvd) {},
-					//fontactive: function(familyName, fvd) {},
-					//fontinactive: function(familyName, fvd) {}
-				};
-				(function() {
-					var wf = document.createElement('script');
-					wf.src = ('https:' === document.location.protocol ? 'https' : 'http') + '://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js';
-					wf.type = 'text/javascript';
-					var s = document.getElementsByTagName('script')[0];
-					s.parentNode.insertBefore(wf, s);
-				})();
-			};
-			
 			this.randomPos = function(ko){
 				var max = this.stage.getWidth() - (ko.getWidth()/2);
 				var min = ko.getWidth()/2;
@@ -1036,115 +1212,6 @@
 				ko.setY(ko.getHeight()/2);
 				ko.getParent().setAbsolutePosition({'x': config.x, 'y': config.y});
 				return config
-			}
-
-			this._selectGroup = function(group){
-				if(this.selectedGroup !== group) {
-					this.selectedGroup = group;
-					//this.updateContext();
-				}
-			};
-
-			this._addToSelected = function(group){
-				for(var i=0; i< secondaryGroups.length; i++){
-					if(secondaryGroups[i] !== group){
-						secondaryGroups.append(group);
-						break;
-						//this.updateContext();
-					}
-				}
-			};
-
-			this._extendConfig = function(config, userConfig) {
-				if(userConfig) {
-					for(var property in userConfig) {
-						if(userConfig.hasOwnProperty(property))
-							config[property] = userConfig[property];
-					}
-				}
-				return config;
-			};
-
-			this.addSubgroup = function(group){
-				var self = this;
-				var newGroup = new Group();
-				if(group){
-					newGroup.copyValues(group);
-				}
-				newGroup.ko = new Kinetic.Group({
-					draggable: true,
-					x: newGroup.rect.x,
-					y: newGroup.rect.y
-				});
-				if(self.hasOwnProperty('selectedGroup')){
-					self.selectedGroup.ko.add(newGroup.ko);
-					newGroup.parent = self.selectedGroup;
-					self.selectedGroup.subgroups.push(newGroup);
-					newGroup.ko.on('mouseup dragstart', function() { 
-						self._selectGroup(newGroup); 
-						newGroup.kineticToGroup();
-					});
-					newGroup.ko.on('mouseout', function() { document.body.style.cursor = 'auto'; });
-					newGroup.ko.on('mouseover', function() { document.body.style.cursor = 'move'; });
-				}else{
-					self.rootGroup = newGroup;
-					newGroup.ko.draggable(false);
-					if(newGroup.rect.width === 0){
-						newGroup.ko.setWidth(this.stage.getWidth()); 
-						newGroup.rect.width = this.stage.getWidth();
-					}
-					if(newGroup.rect.height === 0){
-						newGroup.ko.setHeight(this.stage.getHeight());
-						newGroup.rect.height = this.stage.getHeight();
-					}
-					self.mainLayer.add(newGroup.ko);
-					self.scale(newGroup.rect.width, newGroup.rect.height);
-					newGroup.parent = 'root';
-				}
-				self._selectGroup(newGroup);
-			};
-
-
-			this.addSiblingGroup = function(group){
-				var self = this;
-				var newGroup = new Group();
-				if(group){
-					newGroup.copyValues(group);
-				}
-				if(self.hasOwnProperty('selectedGroup')){
-					if(self.selectedGroup.ko.getParent().getClassName() === 'Group'){ //why check for parent with kinetic instead of group
-						newGroup.ko = new Kinetic.Group({
-							draggable: true,
-							x: newGroup.rect.x,
-							y: newGroup.rect.y
-						});
-						self.selectedGroup.ko.getParent().add(newGroup.ko);
-						self.selectedGroup.parent.subgroups.push(newGroup);
-						newGroup.parent = self.selectedGroup.parent;
-						newGroup.ko.on('mouseup dragstart', function() { 
-							self._selectGroup(newGroup); 
-							newGroup.kineticToGroup();
-						});
-						newGroup.ko.on('mouseout', function() { document.body.style.cursor = 'auto'; });
-						newGroup.ko.on('mouseover', function() { document.body.style.cursor = 'move'; });
-						self._selectGroup(newGroup);
-					}
-				}
-			};
-			this.checkLayer = function(){
-				if((this.selectedGroup.parent === 'root' && this.selectedGroup.getMainNode())){
-					this.addSubgroup();
-				}else if(this.selectedGroup.getMainNode() &&  this.selectedGroup.parent !== 'root'){
-					this.addSiblingGroup();
-				}
-			}
-			this.addImage = function(url){
-				this.checkLayer();
-				this.selectedGroup.editImage(url);
-			}
-			this.addText = function(){
-				this.checkLayer();
-				this.selectedGroup.editText();
 			}
 
 			//EDIT
@@ -1364,7 +1431,7 @@
 				if(group.hasOwnProperty('color')){
 					if(newGroup.color[0] == '#')
 						newGroup.color = this.hexToRGBAString(newGroup.color, newGroup.alpha || 0);
-					//this.addShape(newGroup);
+					this.addShape(newGroup);
 				}
 				if(group.hasOwnProperty('image')){
 					if(group.image.hasOwnProperty('imageId'))
