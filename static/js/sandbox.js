@@ -7,10 +7,12 @@
 		this.url;
 		this.tint = 'none';
 		this.mode = 'scaleAspectFit';
+		//?this.scale;
+
 		this.copyValues = function(img){
 			_.extend(this, img);
-			
 		};
+
 		this.kineticToImg = function(){
 			this.url = this.ko.getImage().src;
 		};
@@ -24,11 +26,13 @@
 		this.font = 'News Cycle';
 		this.justification = 'center';
 		this.style;
+
 		this.copyValues = function(txt){
 			var before;
 			_.extend(this, txt);
 			var after;
 		};
+
 		this.kineticToTxt = function(){
 			this.content = this.ko.getText();
 			this.color = this.ko.fill();
@@ -38,6 +42,7 @@
 			this.style = this.ko.fontStyle();
 		};
 	};
+
 	var Group = function(group){
 		this.rect = {'x':0, 'y':0,'width': 0, 'height': 0};
 		this.stroke = {'color': '#00000000', 'width':0, 'alpha': 0};
@@ -67,6 +72,7 @@
 			_.extend(this.rect, group.rect);
 			_.extend(this.shadow, group.shadow);
 			_.extend(this.gradient, group.gradient);
+			console.log(this.gradient);
 			this.image.copyValues(group.image);
 			this.text.copyValues(group.text);
 			_.map(_.pairs(group), function(pair){
@@ -76,7 +82,6 @@
 					this[key] = val;
 				}
 			}, this);
-
 		};
 		
 		this.setName = function(name){
@@ -145,8 +150,8 @@
 		};
 
 		this.groupToKinetic = function(){
-			this.shapeKO.setWidth(this.shapeWidth);
-			this.shapeKO.setHeight(this.shapeHeight);
+			this.shapeKO.setWidth(this.rect.width);
+			this.shapeKO.setHeight(this.rect.height);
 			this.shapeKO.setFill(this.color);
 			this.rotate(this.rotation);
 			this.shapeKO.stroke(this.stroke.color)
@@ -157,6 +162,70 @@
 			this.shapeKO.shadowBlur(this.shadow.blur); 
 			this.shapeKO.shadowOffset({'x': this.shadow.horizontalOffset, 'y': this.shadow.verticalOffset});
 		};
+
+
+		this.groupToConfig = function(){
+
+			var config = { 
+				'x': 'auto',
+				'y': 'auto',
+				'width': 'auto',
+				'height': 'auto',
+				'curve': 0,
+				'fill': '#000000ff',
+				'stroke': '#ffffffff',
+				'strokeWidth': 1,
+				'strokeAlpha': 1,
+				'padding': 10,
+				'resizingMask': 0,
+				'opacity': 1
+			};
+			_.map(_.pairs(this), function(pair){
+				var key = pair[0];
+				var val = pair[1];
+				if(typeof val !== 'object' && key !== 'subgroups' && typeof val !== 'function' && typeof val !== 'undefined'){
+					if(key === 'color')
+						key = 'fill';
+					if(key === 'alpha')
+						key = 'opacity'
+					config[key] = val;
+				}
+			});
+			
+			if(this.hasOwnProperty('stroke')){
+					config.stroke = this.stroke.color || config.stroke;
+					config.strokeWidth = this.stroke.width || config.strokeWidth;
+					config.strokeAlpha = this.stroke.alpha || config.strokeAlpha;
+			}
+
+			if(this.hasOwnProperty('rect')){
+					config.width = this.rect.width || config.width;
+					if(this.rect.width != 'auto') 
+						config.x = this.rect.width/2;
+					config.height = this.rect.height || config.height;
+					if(this.rect.height != 'auto') 
+						config.y = this.rect.height/2;
+			}
+
+			if(this.hasOwnProperty('shadow')){
+					config.shadowOffsetX = this.shadow.horizontalOffsetX || 0;
+					config.shadowOffsetY = this.shadow.verticalOffsetY || 0;
+					config.shadowBlur = this.shadow.blur || 0;
+					config.shadowColor = this.shadow.color || "rgba(0,0,0,0)";
+			}
+
+			if(config.width === 'auto' || config.height === 'auto'){
+				if(this.getMainNode() ){
+					config.width = this.getMainNode().getWidth() + 2*this.padding;
+					config.height = this.getMainNode().getHeight();
+				}else{
+					config.width = Math.floor(Math.random() * ((canvas.stage.getWidth() * .75) - (canvas.stage.getWidth() * .1)) + (canvas.stage.getWidth() * .1));
+					config.height = Math.floor(Math.random() * ((canvas.stage.getHeight() * .75) - (canvas.stage.getHeight() * .1)) + (canvas.stage.getHeight() * .1));
+				}
+			}
+
+			return config;
+		}
 
 		this.updateRect = function(){
 			this.rect.x = this.ko.x();
@@ -193,6 +262,23 @@
 			this.margins.bottom = canvas.stage.getHeight()-(this.shapeKO.getAbsolutePosition().y + this.shapeKO.getHeight()/2);
 		};
 
+		this.shapeHeight = function(change){
+			this.rect.height = change;
+			this.editShape();
+		}
+		this.shapeWidth = function(change){
+			this.rect.width = change;
+			this.editShape();
+		}
+		this.shapeFill = function(change){
+			this.color = change;
+			this.shapeKO.fillPriority('color');
+			this.editShape();
+		}
+		this.shapeStroke = function(change){
+			this.stroke.color = change;
+			this.editShape();
+		}
 
 
 		this.textColor = function(color){
@@ -244,15 +330,15 @@
 
 		this.resizeShape = function(){
 			if(canvas.autoSize == true && this.hasOwnProperty('shapeKO') && this.getMainNode()){
-				//this.rect.width = this.getMainNode().getWidth() + this.padding
-				//this.rect.height = this.getMainNode().getHeight()
-				//this.editShape()
-				this.editShape({'width': this.getMainNode().getWidth() + this.padding, 'height': this.getMainNode().getHeight()});
+				this.rect.width = this.getMainNode().getWidth();
+				this.rect.height = this.getMainNode().getHeight();
+				this.editShape();
 			}
 		};
 
 		this.shapeGradient = function(gradient){
 			gradient = gradient || {};
+			console.log('gradient');
 			if(this.hasOwnProperty('shapeKO')){
 				_.extend(this, gradient);
 				var direction = this.gradient.direction;
@@ -310,29 +396,14 @@
 			var fill = this.color;
 			if(color)
 				fill = color;
-			if(typeof color === 'string')
+			if(typeof color === 'string'){
+				this.color = fill;
 				this.shapeKO.fill(fill);
-		};
-		/*not used?
-		this.shapeShadow = function(config){
-
-			if(!config.hasOwnProperty('shadow')){
-				config.shadowOffsetX = self.shadow.horizontalOffset;
-				config.shadowOffsetY = self.shadow.verticalOffset;
-				config.shadowBlur = self.shadow.blur;
-				config.shadowColor = self.shadow.color;
-			}else{
-				if(!config.shadow.hasOwnProperty('shadowOffsetX'))
-					config.shadowOffsetX = self.shadow.horizontalOffset;
-				if(!config.shadow.hasOwnProperty('shadowOffsetY'))
-					config.shadowOffsetY = self.shadow.verticalOffset;
-				if(!config.shadow.hasOwnProperty('shadowBlur'))
-					config.shadowBlur = self.shadow.blur;
-				if(!config.shadow.hasOwnProperty('shadowColor'))
-					config.shadowColor = self.shadow.color;
+				this.shapeKO.fillPriority('color');
+				canvas.mainLayer.batchDraw();
 			}
 		};
-		*/
+
 		this.shadowEdit = function(s){
 			var node = this.getMainNode();
 			if(this.hasOwnProperty('shapeKO')){
@@ -358,26 +429,20 @@
 			canvas.mainLayer.batchDraw();
 		};
 
-		this.editShape=function(config){
+		this.editShape=function(){
 			//change to be able to create a new object as well
-			if(this.shapeKO){
 				var newShape;
 				var self = this;
-				config.width = config.width || self.shapeKO.getWidth();
-				config.height = config.height || self.shapeKO.getHeight();
-				config.curve = config.curve || self.curve;
-				config.fill = config.fill || self.color;
-				if(!config.hasOwnProperty('stroke')){
-					config.stroke = self.stroke.color;
-					config.strokeWidth = self.stroke.width;
-					config.strokeAlpha = self.stroke.alpha;
-				}else{
-					config.strokeWidth = config.stroke.width || self.stroke.width;
-					config.strokeAlpha = config.stroke.alpha || self.stroke.alpha;
-					config.stroke = config.stroke.color || self.stroke.color;
-				}
 
-				this.shapeKO.fillPriority('color'); //Todo check for gradient fill?
+				var config = this.groupToConfig();
+				
+				var fillPriority = 'color';
+				if(this.gradient.colors.length>0)
+					fillPriority = 'gradient';
+				if(this.hasOwnProperty('shapeKO'))
+					fillPriority = this.shapeKO.getFillPriority();
+
+				//this.shapeKO.fillPriority(); //Todo check for gradient fill?
 				
 				if (config.curve>=0){
 					newShape = new Kinetic.Shape(canvas._extendConfig({
@@ -394,8 +459,8 @@
 							context.quadraticCurveTo(0, 0, config.curve,0);
 							context.fillStrokeShape(this); //for fill and stroke
 						},
-						x: self.shapeKO.getX(),
-						y: self.shapeKO.getY(),
+						x: 0,
+						y: 0,
 						draggable: false
 					}, config));
 					newShape.setOffsetX(newShape.getWidth()/2);
@@ -403,29 +468,53 @@
 				}else if (config.curve == -1){
 					newShape = new Kinetic.Ellipse(canvas._extendConfig({
 						radius: {x: config.width/2, y:config.height/2},
-						x: self.shapeKO.getX(),
-						y: self.shapeKO.getY(),
+						x: 0,
+						y: 0,
 						draggable:false								
 					}, config));
 				}
-
 				this.ko.add(newShape);
-				var oldWidth = this.shapeKO.getWidth();
-				var oldHeight = this.shapeKO.getHeight();
-				var fillPriority = this.shapeKO.fillPriority();
+
+				var oldWidth = newShape.getWidth();
+				var oldHeight = newShape.getHeight();
 				
-				this.shapeKO.destroy();
+				if(this.hasOwnProperty('shapeKO')){
+					oldWidth = this.shapeKO.getWidth();
+					oldHeight = this.shapeKO.getHeight();
+					this.shapeKO.destroy();
+				}
 				this.shapeKO = newShape;
+				if(this.parent === 'root'){
+					this.shapeKO.setX(canvas.stage.getWidth()/2);
+					this.shapeKO.setY(canvas.stage.getHeight()/2);
+				}else{
+					if(!this.getMainNode() && config.x === 'auto' && config.y === 'auto'){
+						canvas.randomPos(newShape);
+					}else if(config.x === 'auto' && config.y === 'auto'){
+						this.shapeKO.setX(this.getMainNode().getWidth()/2);
+						this.shapeKO.setY(this.getMainNode().getHeight()/2);
+					}
+				}
 				if(fillPriority === 'color'){
 					this.shapeFill(config.fill);
-				}else if(fillPriority === 'linear-gradient' || fillPriority === 'radial-gradient'){
+				}else if(fillPriority === 'gradient' || fillPriority === 'linear-gradient' || fillPriority === 'radial-gradient' ){
 					this.shapeGradient(config.gradient);
 				}
 				this.shapeKO.moveToBottom();
 				this.scaleMainNode(newShape.getWidth()-oldWidth, newShape.getHeight()-oldHeight);
-
-				this.shapeWidth = config.width;
-				this.shapeHeight = config.height;
+				if(this.getMainNode()){
+					var node = this.getMainNode();
+					if(node.hasShadow() && !shape.hasShadow()){
+						newShape.shadowOpacity(node.shadowOpacity());
+						newShape.shadowOffsetX(node.shadowOffsetX());
+						newShape.shadowOffsetY(node.shadowOffsetY());
+						newShape.shadowBlur(node.shadowBlur());
+						newShape.shadowColor(node.shadowColor());
+					}
+					node.shadowOpacity(0);
+				}
+				this.rect.width = config.width;
+				this.rect.height = config.height;
 				this.color = config.fill;
 				this.stroke.color = config.stroke;
 				this.stroke.width = config.strokeWidth;
@@ -436,8 +525,11 @@
 								'blur': config.shadowBlur, 
 								'color': config.shadowColor
 								}; 
+
+				this.kineticToGroup();
+				this.updateMargins();
+				canvas.relayer(this);
 				canvas.mainLayer.batchDraw();
-			}
 		};
 
 		this.onImageLoad = function(args) {
@@ -512,13 +604,9 @@
 					var key = pair[0];
 					var val = pair[1];
 					if(typeof val !== 'object' && key !== 'subgroups'){
-						//why ??? 
-						//if(key === 'color')
-						//	key = 'fill';
 						config[syntaxSwitch[key]] = val;
 					}
 				});
-				//TODO: check group.rect.width and height if not set 
 				config.x = this.rect.width/2 || 'auto';
 				config.y = this.rect.height/2 || 'auto';
 				config.shadowOffsetX = this.shadow.horizontalOffsetX || 0;
@@ -541,7 +629,7 @@
 					textKO.setY(canvas.stage.getHeight()/2);
 				}else{
 					if(!this.hasOwnProperty('shapeKO') && config.x === 'auto' && config.y === 'auto'){
-						this.randomPos(textKO);
+						canvas.randomPos(textKO);
 					}else if(config.x === 'auto' && config.y === 'auto'){
 						textKO.setX(this.selectedGroup.shapeKO.getWidth()/2);
 						textKO.setY(this.selectedGroup.shapeKO.getHeight()/2);
@@ -637,7 +725,8 @@
 
 		this.scaleMainNode = function(diffX, diffY){
 			if(this.getMainNode()){
-				if (this.getMainNode().getClassName() === 'Image'){
+				var mNode = this.getMainNode();
+				if (mNode.getClassName() === 'Image'){
 					if(this.image.hasOwnProperty('mode')){
 						var shapeWidth;
 						var shapeHeight;
@@ -652,266 +741,49 @@
 							}
 							if(this.image.mode === 'center'){
 							}else if(this.image.mode === 'scaleToFill'){
-								this.image.ko.setWidth(shapeWidth+diffX - 2*this.padding);
-								this.image.ko.setHeight(shapeHeight+diffY);
-								this.image.ko.setOffsetX(shapeWidth/2);
-								this.image.ko.setOffsetY(shapeHeight/2);
-								this.image.ko.setX(this.shapeKO.getX()+ this.padding);
-								this.image.ko.setY(this.shapeKO.getY());
+								mNode.setWidth(shapeWidth+diffX - 2*this.padding);
+								mNode.setHeight(shapeHeight+diffY);
+								mNode.setOffsetX(shapeWidth/2);
+								mNode.setOffsetY(shapeHeight/2);
+								mNode.setX(this.shapeKO.getX()+ this.padding);
+								mNode.setY(this.shapeKO.getY());
 							}else if(this.image.mode === 'scaleAspectFit'){
 								if(shapeHeight <= shapeWidth - 2*this.padding){
-									var oldHeight = this.image.ko.getHeight();
-									this.image.ko.setHeight(shapeHeight+diffY);
-									this.image.ko.setOffsetY(this.image.ko.getHeight()/2);
-									this.image.ko.setWidth(this.image.ko.getWidth() * (this.image.ko.getHeight()/oldHeight));
-									this.image.ko.setOffsetX(this.image.ko.getWidth()/2);							
+									var oldHeight = mNode.getHeight();
+									mNode.setHeight(shapeHeight+diffY);
+									mNode.setOffsetY(mNode.getHeight()/2);
+									mNode.setWidth(mNode.getWidth() * (mNode.getHeight()/oldHeight));
+									mNode.setOffsetX(mNode.getWidth()/2);							
 								}else{
-									var oldWidth = this.image.ko.getWidth();
-									this.image.ko.setWidth(shapeWidth+diffX - 2*this.padding);
-									this.image.ko.setOffsetX(this.image.ko.getWidth()/2);
-									this.image.ko.setHeight(this.image.ko.getHeight() * (this.image.ko.getWidth()/oldWidth));
-									this.image.ko.setOffsetY(this.image.ko.getHeight()/2);							
+									var oldWidth = mNode.getWidth();
+									mNode.setWidth(shapeWidth+diffX - 2*this.padding);
+									mNode.setOffsetX(mNode.getWidth()/2);
+									mNode.setHeight(mNode.getHeight() * (mNode.getWidth()/oldWidth));
+									mNode.setOffsetY(mNode.getHeight()/2);							
 								}
 							}else if(this.image.mode === 'scaleAspectFill'){
 								if(shapeHeight > shapeWidth - 2*this.padding){
-									var oldHeight = this.image.ko.getHeight();
-									this.image.ko.setHeight(shapeHeight+diffY);
-									this.image.ko.setOffsetY(this.image.ko.getHeight()/2);
-									this.image.ko.setWidth(this.image.ko.getWidth() * (this.image.ko.getHeight()/oldHeight));
-									this.image.ko.setOffsetX(this.image.ko.getWidth()/2);							
+									var oldHeight = mNode.getHeight();
+									mNode.setHeight(shapeHeight+diffY);
+									mNode.setOffsetY(mNode.getHeight()/2);
+									mNode.setWidth(mNode.getWidth() * (mNode.getHeight()/oldHeight));
+									mNode.setOffsetX(mNode.getWidth()/2);							
 								}else{
-									var oldWidth = this.image.ko.getWidth();
-									this.image.ko.setWidth(shapeWidth+diffX - 2*this.padding);
-									this.image.ko.setOffsetX(this.image.ko.getWidth()/2);
-									this.image.ko.setHeight(this.image.ko.getHeight() * (this.image.ko.getWidth()/oldWidth));
-									this.image.ko.setOffsetY(this.image.ko.getHeight()/2);							
+									var oldWidth = mNode.getWidth();
+									mNode.setWidth(shapeWidth+diffX - 2*this.padding);
+									mNode.setOffsetX(mNode.getWidth()/2);
+									mNode.setHeight(mNode.getHeight() * (mNode.getWidth()/oldWidth));
+									mNode.setOffsetY(mNode.getHeight()/2);							
 								}
 							}
 						}
 					}
+				}else if(mNode.getClassName() === 'Text'){
+					mNode.setX(this.shapeKO.getX());
+					mNode.setY(this.shapeKO.getY());
 				}
 			}
 		}
-
-
-			this.addShape = function(group){
-				var shape;
-				var self = this;
-				//use underscore 
-				//var config = this.createConfig(group);
-				//Move to create config
-				var config = { 
-					'x': 'auto',
-					'y': 'auto',
-					'width': 'auto',
-					'height': 'auto',
-					'curve': 0,
-					'fill': '#000000ff',
-					'stroke': '#ffffffff',
-					'strokeWidth': 1,
-					'padding': 10,
-					'resizingMask': 0,
-					'opacity': 1
-				};
-				_.map(_.pairs(group), function(pair){
-					var key = pair[0];
-					var val = pair[1];
-					if(typeof val !== 'object' && key !== 'subgroups'){
-						if(key === 'color')
-							key = 'fill';
-						if(key === 'alpha')
-							key = 'opacity'
-						config[key] = val;
-					}
-				});
-				
-				if(group.hasOwnProperty('stroke')){
-					if (group.stroke.hasOwnProperty('color'))
-						config.stroke = group.stroke.color;
-					if (group.stroke.hasOwnProperty('width'))
-						config.strokeWidth = group.stroke.width;
-					if (group.stroke.hasOwnProperty('alpha'))
-						config.strokeAlpha = group.stroke.alpha;
-				}
-
-				if(group.hasOwnProperty('rect')){
-					if(group.rect.hasOwnProperty('width')){
-						config.width = group.rect.width;
-						if(group.rect.width != 'auto') 
-							config.x = group.rect.width/2;
-					}
-					if(group.rect.hasOwnProperty('height')){
-						config.height = group.rect.height;
-						if(group.rect.height != 'auto') 
-							config.y = group.rect.height/2;
-					}
-				}
-
-				if(group.hasOwnProperty('shadow')){
-					if(group.shadow.hasOwnProperty('horizontalOffsetX'))
-						config.shadowOffsetX = group.shadow.horizontalOffsetX;
-					if(group.shadow.hasOwnProperty('verticalOffsetY'))
-						config.shadowOffsetY = group.shadow.verticalOffsetY;
-					if(group.shadow.hasOwnProperty('blur'))
-						config.shadowBlur = group.shadow.blur;
-					if(group.shadow.hasOwnProperty('color'))
-						config.shadowColor = group.shadow.color;
-				}
-
-				if(!self.selectedGroup  || (self.selectedGroup.parent === 'root' && self.selectedGroup.shapeKO)){
-					self.addSubgroup();
-				}else if(self.selectedGroup.shapeKO){
-					self.addSiblingGroup();
-				}
-				if(config.width === 'auto' || config.height === 'auto'){
-					if(self.selectedGroup.getMainNode() ){
-						config.width = self.selectedGroup.getMainNode().getWidth() + 2*self.selectedGroup.padding;
-						config.height = self.selectedGroup.getMainNode().getHeight();
-					}else{
-						config.width = Math.floor(Math.random() * ((self.stage.getWidth() * .75) - (self.stage.getWidth() * .1)) + (self.stage.getWidth() * .1));
-						config.height = Math.floor(Math.random() * ((self.stage.getHeight() * .75) - (self.stage.getHeight() * .1)) + (self.stage.getHeight() * .1));
-					}
-				}
-
-				if(group.hasOwnProperty('gradient')){
-					var colorStops = [0, 'gray', 1, 'black'];
-					if(group.gradient.hasOwnProperty('colors') && group.gradient.hasOwnProperty('colorStops')){
-						if(group.gradient.colors.length > 0 && group.gradient.colorStops.length > 0)
-							colorStops = [];
-						for(var i = 0; i < group.gradient.colors.length && i < group.gradient.colorStops.length; i++){
-							colorStops.push(group.gradient.colorStops[i]);
-							colorStops.push(group.gradient.colors[i]);
-						}
-					}
-
-					var startPointX;
-					var startPointY;
-					var endPointX;
-					var endPointY;
-					var startAndEndPoints = [
-						[0, config.height/2, config.width, config.height/2], //linear horizontal rect
-						[config.width/2, 0, config.width/2, config.height],  //linear vertical rect
-						[-config.width/2, 0, config.width/2, 0], //linear horizontal ellipse
-						[0, -config.height/2, 0, config.height/2], //linear vertical ellipse
-						[config.width/2, config.height/2, config.width, config.height] //radial
-						];
-					var gradientType = 0; 
-					if(!group.gradient.hasOwnProperty('startX') || !group.gradient.hasOwnProperty('startY') || !group.gradient.hasOwnProperty('endX') || !group.gradient.hasOwnProperty('endY')){
-							if(group.gradient.direction === 'linear-horizontal')
-								gradientType = 0;
-							if(group.gradient.direction === 'linear-vertical')
-								gradientType = 1;
-							if(config.curve === -1)
-								gradientType = gradientType + 2;
-							if(group.gradient.direction === 'radial')
-								gradientType = 4;
-							startPointX = startAndEndPoints[gradientType][0];
-							startPointY = startAndEndPoints[gradientType][1];
-							endPointX = startAndEndPoints[gradientType][2];
-							endPointY = startAndEndPoints[gradientType][3];
-					}else{
-							startPointX = group.gradient.startX;
-							startPointY = group.gradient.startY;
-							endPointX = group.gradient.endX;
-							endPointY = group.gradient.endY;
-					}
-					
-					if (group.gradient.hasOwnProperty('direction')) {
-						if(group.gradient.direction === 'linear-vertical' || group.gradient.direction === 'linear-horizontal'){
-							config.fillLinearGradientStartPoint = {'x':startPointX, 'y': startPointY};
-							config.fillLinearGradientEndPoint = {'x': endPointX, 'y':endPointY};
-							config.fillLinearGradientColorStops = colorStops;
-							config.fillPriority = 'linear-gradient';
-						} else if(group.gradient.direction === 'radial'){
-							var rad ;
-							if(config.height > config.width)
-								rad = config.height/2;
-							else
-								rad = config.width/2;
-							config.fillRadialGradientStartRadius = 3;
-							config.fillRadialGradientEndRadius = rad;
-							if(config.curve >= 0){
-								config.fillRadialGradientStartPoint = {'x':config.width/2, 'y': config.height/2};
-								config.fillRadialGradientEndPoint = {'x': config.width/2, 'y':config.height/2};
-							}
-							config.fillRadialGradientColorStops = colorStops;
-							config.fillPriority = 'radial-gradient';
-						}else{
-							config.fillPriority = 'color';
-						}
-					}
-				}else{
-					group.gradient = {};
-					group.gradient.direction = 'none';
-				}
-				///////////////////////////////////////////////////////////////////////
-				if (config.curve>=0){
-					shape = new Kinetic.Shape(self._extendConfig({
-						sceneFunc: function(context){
-							context.beginPath();
-							context.moveTo(config.curve, 0);
-							context.lineTo(config.width-config.curve, 0);
-							context.quadraticCurveTo(config.width, 0, config.width, config.curve);
-							context.lineTo(config.width, config.height-config.curve);
-							context.quadraticCurveTo(config.width, config.height, config.width-config.curve, config.height);
-							context.lineTo(config.curve, config.height);
-							context.quadraticCurveTo(0, config.height, 0, config.height-config.curve);
-							context.lineTo(0, config.curve);
-							context.quadraticCurveTo(0, 0, config.curve,0);
-							context.fillStrokeShape(this); //for fill and stroke
-						},
-					}, config));
-					shape.setOffsetX(shape.getWidth()/2);
-					shape.setOffsetY(shape.getHeight()/2);
-				}else if (config.curve == -1){
-					shape = new Kinetic.Ellipse(self._extendConfig({
-						radius: {x: config.width/2, y:config.height/2},
-						x: 0,
-						y: 0,
-						strokeWidth: 2,
-						draggable:false								
-					}, config));
-				}
-
-				self.selectedGroup.ko.add(shape);
-				if(self.selectedGroup.parent === 'root'){
-					shape.setX(self.stage.getWidth()/2);
-					shape.setY(self.stage.getHeight()/2);
-				}else{
-					if(!self.selectedGroup.getMainNode() && config.x === 'auto' && config.y === 'auto'){
-						self.randomPos(shape);
-					}else if(config.x === 'auto' && config.y === 'auto'){
-						shape.setX(self.selectedGroup.getMainNode().getWidth()/2);
-						shape.setY(self.selectedGroup.getMainNode().getHeight()/2);
-					}
-				}
-
-				if(self.selectedGroup.getMainNode()){
-					var node = self.selectedGroup.getMainNode();
-					if(node.hasShadow() && !shape.hasShadow()){
-						shape.shadowOpacity(node.shadowOpacity());
-						shape.shadowOffsetX(node.shadowOffsetX());
-						shape.shadowOffsetY(node.shadowOffsetY());
-						shape.shadowBlur(node.shadowBlur());
-						shape.shadowColor(node.shadowColor());
-					}
-					node.shadowOpacity(0);
-				}
-
-				self.selectedGroup.copyValues(group);
-				
-				//self.selectedGroup.minimumSize.width = shape.getWidth()/2;
-				//self.selectedGroup.minimumSize.height = shape.getHeight()/2;
-
-				self.selectedGroup.shapeKO = shape;
-				self.selectedGroup.kineticToGroup();
-				self.selectedGroup.updateMargins();
-				self.relayer(self.selectedGroup);
-				self.mainLayer.batchDraw();			
-			};
-			
-
-
 	};
 
 	var factory = function($, Kinetic){
@@ -1112,7 +984,7 @@
 					newGroup.copyValues(group);
 				}
 				if(self.hasOwnProperty('selectedGroup')){
-					if(self.selectedGroup.ko.getParent().getClassName() === 'Group'){ //why check for parent with kinetic instead of group
+					if(self.selectedGroup.parent !== 'root'){
 						newGroup.ko = new Kinetic.Group({
 							draggable: true,
 							x: newGroup.rect.x,
@@ -1131,29 +1003,43 @@
 					}
 				}
 			};
+
 			this.checkLayer = function(){
-				if((this.selectedGroup.parent === 'root' && this.selectedGroup.getMainNode())){
+				if(this.hasOwnProperty("selectedGroup")){
+					if((this.selectedGroup.parent === 'root' && this.selectedGroup.getMainNode())){
+						this.addSubgroup();
+					}else if(this.selectedGroup.getMainNode() &&  this.selectedGroup.parent !== 'root'){
+						this.addSiblingGroup();
+					}
+				}else{
 					this.addSubgroup();
-				}else if(this.selectedGroup.getMainNode() &&  this.selectedGroup.parent !== 'root'){
-					this.addSiblingGroup();
 				}
 			}
 			this.addImage = function(url){
 				this.checkLayer();
+				//this.selectedGroup.image.copyValues(url);
 				this.selectedGroup.editImage(url);
 			}
-			this.addText = function(){
+			this.addText = function(textOptions){
 				this.checkLayer();
+				this.selectedGroup.text.copyValues(textOptions);
 				this.selectedGroup.editText();
+			}
+			this.addShape = function(group){
+				if(!this.selectedGroup  || (this.selectedGroup.parent === 'root' && this.selectedGroup.hasOwnProperty('shapeKO'))){
+					this.addSubgroup();
+				}else if(this.selectedGroup.hasOwnProperty('shapeKO')){
+					this.addSiblingGroup();
+				}
+				this.selectedGroup.copyValues(group);
+				this.selectedGroup.editShape();
 			}
 
 			//EDIT
 			this.reorder = function(newParent, group){
 				if (newParent != 'root' && group != 'root'){
 					//check if group is root group
-					if(group.parent === 'root'){
-
-					}else{
+					if(group.parent != 'root'){
 						var parent = group.parent;
 						newParent.subgroups.push(group);
 						if(parent.subgroups.indexOf(group) > -1)
@@ -1237,8 +1123,11 @@
 				this.border.setHeight(newHeight);
 				this.stage.setWidth(newWidth);
 				this.stage.setHeight(newHeight);
-				if(this.hasOwnProperty('rootGroup'))
+				if(this.hasOwnProperty('rootGroup')){
+						this.rootGroup.ko.setX(newWidth/2 - this.rootGroup.rect.width/2);
+						this.rootGroup.ko.setY(newHeight/2 - this.rootGroup.rect.height/2);
 						this.groupScale(this.rootGroup, diffX, diffY);
+				}
 			};
 
 			this.checkForMinWidth=function(group){
@@ -1262,10 +1151,11 @@
 
 			}
 
-			this.calculateReachMin
+			this.calculateReachMin=function(height){
+
+			}
 
 			this.groupScale = function(group, diffX, diffY){
-				//group.resizingMask
 				if(group.hasOwnProperty('resizingMask')){
 					var flexLeft = (group.resizingMask & 1) === 1;
 					var flexWidth = (group.resizingMask & 2)=== 2;
@@ -1314,7 +1204,7 @@
 
 						//height
 						//8
-						if(flexTop && !flexHeight && !flexBottom ){//&& distanceBottom >group.margins.top
+						if(flexTop && !flexHeight && !flexBottom ){
 							group.ko.setY(group.ko.y() + diffY );
 						}
 						//16
@@ -1323,7 +1213,7 @@
 								group.ko.setY(group.ko.y() + diffY/2 );	
 						}
 						//24
-						else if(flexTop && flexHeight && !flexBottom ){//&& distanceBottom > group.margins.bottom
+						else if(flexTop && flexHeight && !flexBottom ){
 								group.editShape({'height': group.shapeKO.getHeight() + diffY/2} );
 								group.ko.setY(group.ko.y() + diffY/2 );
 						}
@@ -1333,7 +1223,7 @@
 							group.ko.setY(group.ko.y() + diffY/2 );
 						}
 						//48
-						else if(!flexTop && flexHeight && flexBottom ){//&& distanceTop > group.margins.top
+						else if(!flexTop && flexHeight && flexBottom ){
 								group.editShape({'height': group.shapeKO.getHeight() + diffY/2} );
 								group.ko.setY(group.ko.y() + diffY/4 );
 						}
@@ -1353,8 +1243,15 @@
 				}
 			};
 
-			this.save=function(){
+			this.save=function(group){
 				//go through each node, delete all temporary variables, convert colors to rgba hex and send as a json
+				if(group.hasOwnProperty('shapeKO')){
+					delete group.shapeKO;
+					delete group.ko;
+					delete group.parent;
+					//delete group.minimumSize = {'width': 0, 'height':0};
+					//delete group.margins = {'left': 0, 'right': 0, 'top': 0, 'bottom': 0};
+				}
 			};
 
 			//takes in an array of groups and renders them into the canvas
@@ -1364,15 +1261,15 @@
 				if(group.hasOwnProperty('color')){
 					if(newGroup.color[0] == '#')
 						newGroup.color = this.hexToRGBAString(newGroup.color, newGroup.alpha || 0);
-					//this.addShape(newGroup);
+					this.addShape(newGroup);
 				}
 				if(group.hasOwnProperty('image')){
 					if(group.image.hasOwnProperty('imageId'))
-						this.addImage(newGroup.image.imageId, newGroup);
+						this.addImage(newGroup.image.imageId);
 					else if(group.image.hasOwnProperty('url'))
-						this.addImage(newGroup.image.url, newGroup);
+						this.addImage(newGroup.image.url);
 				}else if(group.hasOwnProperty('text')){
-					this.addText(newGroup);
+					this.addText(newGroup.text);
 				}
 				if (group.hasOwnProperty('subgroups') ) {
 					for(var i = 0; i < group.subgroups.length; i++){
@@ -1383,7 +1280,6 @@
 			}; 
 
 			this.relayer = function(group){
-				//used to fix image layers since load time takes it out of order
 				if (group.hasOwnProperty('ko')) {
 					if(group.ko.hasOwnProperty('children')){
 						if(group.getMainNode())

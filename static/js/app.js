@@ -98,7 +98,7 @@ function( sandbox, kinetic, bootstrapCP, bootstrapS, jqueryKnob, p, recentPins, 
 			max: 1000,
 			orientation: 'horizontal',
 		}).on('slide', function(ev){
-			canvas.selectedGroup.editShape({'height':ev.value});
+			canvas.selectedGroup.shapeHeight(ev.value);
 		}).data('slider');
 
 		var shapeW= $('#shapeW').slider({
@@ -106,14 +106,14 @@ function( sandbox, kinetic, bootstrapCP, bootstrapS, jqueryKnob, p, recentPins, 
 			max: 780,
 			orientation: 'horizontal',
 		}).on('slide', function(ev){
-			canvas.selectedGroup.editShape({'width':ev.value});
+			canvas.selectedGroup.shapeWidth(ev.value);
 		}).data('slider');
 
 		$('#fillColor').colorpicker({format:"rgba", color:'rgba(0,0,0,1)'}).on('changeColor', function(ev){
-		  canvas.selectedGroup.editShape({'fill': toRGBAString(ev.color.toRGB())});
+		  canvas.selectedGroup.shapeFill(toRGBAString(ev.color.toRGB()));
 		});
 		$('#strokeColor').colorpicker({format:"rgba", color:'rgba(255,255,255,1)'}).on('changeColor', function(ev){
-		  canvas.selectedGroup.editShape({'stroke': toRGBAString(ev.color.toRGB())});
+		  canvas.selectedGroup.shapeStroke(toRGBAString(ev.color.toRGB()));
 		});
 
 		//text
@@ -166,7 +166,7 @@ function( sandbox, kinetic, bootstrapCP, bootstrapS, jqueryKnob, p, recentPins, 
 	$("#addText").click(function() {
 		text = $('#textarea-overlay').val();
 		font = $('#fontSelect').val();
-	    canvas.addText({'text': {'content': text, 'font': font}} );
+	    canvas.addText({'content': text, 'font': font});
 	});
 
 	$("#fontEdit").change(function(){
@@ -200,6 +200,7 @@ function( sandbox, kinetic, bootstrapCP, bootstrapS, jqueryKnob, p, recentPins, 
 			var group = {}
 			group.curve = -1;
 			group.color = 'rgba(0,0,0,0.5)';
+			group.alpha = 1;
 			group.rect = { 'width' : 'auto', 'height' : 'auto', 'x' : 'auto', 'y' : 'auto'};
 			group.gradient = {'colors':['white','black'], 'direction':'linear-vertical', 'colorStops':[0,1]};
 			canvas.addShape(group);
@@ -243,6 +244,6 @@ function( sandbox, kinetic, bootstrapCP, bootstrapS, jqueryKnob, p, recentPins, 
 	})
 	
 	canvas.loadFonts("fontSelect", fontSelected);
-	canvas.load(image2);
+	//canvas.load(image2);
 	
 })
