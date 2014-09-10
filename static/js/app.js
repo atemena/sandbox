@@ -205,7 +205,7 @@ function( sandbox, kinetic, bootstrapCP, bootstrapS, jqueryKnob, p, recentPins, 
 			group.gradient = {'colors':['white','black'], 'direction':'linear-vertical', 'colorStops':[0,1]};
 			canvas.addShape(group);
 		}else{
-			canvas.addShape({'curve': -1, 'color':'rgba(0,0,0,0.5)', 'rect': {'width': canvas.stage.getWidth(), 'height': canvas.stage.getHeight(), 'x': 0, 'y':0}, 'resizingMask': 18});
+			canvas.addShape({'curve': -1,  alpha:'1', 'color':'rgba(0,0,0,0.5)', 'rect': {'width': canvas.stage.getWidth(), 'height': canvas.stage.getHeight(), 'x': 0, 'y':0}, 'resizingMask': 18});
 		}
 	});
 	$("#addSubgroup").click(function() {
@@ -221,7 +221,7 @@ function( sandbox, kinetic, bootstrapCP, bootstrapS, jqueryKnob, p, recentPins, 
 			group.gradient = {'colors':['white','black'], 'direction':'linear-horizontal', 'colorStops':[0,1]};
 			canvas.addShape(group);
 		}else{
-			canvas.addShape({'curve': 0, 'color':'rgba(0,0,0,0.5)', 'rect': {'width': canvas.stage.getWidth(), 'height': canvas.stage.getHeight(), 'x': 0, 'y': 0}, 'resizingMask': 18});
+			canvas.addShape({'curve': 0, alpha:'1', 'color':'rgba(0,0,0,0.5)', 'rect': {'width': canvas.stage.getWidth(), 'height': canvas.stage.getHeight(), 'x': 0, 'y': 0}, 'resizingMask': 18});
 		}
 	});
 	$("#resize").click(function() {

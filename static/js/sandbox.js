@@ -7,6 +7,7 @@
 		this.url;
 		this.tint = 'none';
 		this.mode = 'scaleAspectFit';
+		this.defaultSize;
 		//?this.scale;
 
 		this.copyValues = function(img){
@@ -16,6 +17,19 @@
 		this.kineticToImg = function(){
 			this.url = this.ko.getImage().src;
 		};
+
+		this.deleteSelf = function(){
+			this.ko.destroy();
+			delete this.imageId;
+			delete this.url;
+			this.tint = 'none';
+			this.mode = 'scaleAspectFit';
+		};
+
+		this.setPreviewImage = function(width, height){
+			this.url = 'http://placehold.it/'+width+'x'+height;
+			return this.url;
+		}
 	};
 
 	var Txt = function(){
@@ -41,6 +55,15 @@
 			this.justification = this.ko.align();
 			this.style = this.ko.fontStyle();
 		};
+
+		this.deleteSelf = function(){
+			this.ko.destroy();
+			this.content = 'preview';
+			this.color = 'rgba(0,0,0,1)';
+			this.size = 32;
+			this.font = 'News Cycle';
+			this.justification = 'center';
+		}
 	};
 
 	var Group = function(group){
@@ -114,7 +137,7 @@
 				this.color = this.shapeKO.fill();
 				this.rotation = this.shapeKO.rotation();
 				this.stroke = {'color':this.shapeKO.stroke(), 'width':this.shapeKO.strokeWidth(), 'stroke': this.shapeKO.strokeAlpha()};
-				this.alpha = this.shapeKO.fillAlpha();
+				this.alpha = this.shapeKO.opacity();
 				this.shadow = {'horizontalOffset': this.shapeKO.shadowOffsetX(), 'verticalOffset': this.shapeKO.shadowOffsetY(), 'blur': this.shapeKO.shadowBlur(), 'color': this.shapeKO.shadowColor() };	
 				var colors = [];
 				var stops = [];
@@ -335,6 +358,23 @@
 				this.editShape();
 			}
 		};
+
+		this.deleteShape = function(){
+			if(this.hasOwnProperty('shapeKO')){
+				this.shapeKO.destroy();
+				this.rect = {'x':0, 'y':0,'width': 0, 'height': 0};
+				this.stroke = {'color': '#00000000', 'width':0, 'alpha': 0};
+				this.color='#00000000';
+				this.gradient = {'colors':[], 'direction':'none', 'colorStops':[], 'startX':0, 'startY':0, 'endX':0, 'endY':0};
+				this.padding = 0;
+				this.curve = 0;
+				this.alpha = 0;
+				this.rotation = 0;
+				this.resizingMask = 0;
+				this.shadow = {'horizontalOffset': 0, 'verticalOffset': 0, 'blur': 0, 'color': 'rgba(0,0,0,1)'};
+
+			}
+		}
 
 		this.shapeGradient = function(gradient){
 			gradient = gradient || {};
@@ -566,7 +606,7 @@
 			this.kineticToGroup();
 			canvas.relayer(this);
 			canvas.mainLayer.batchDraw();
-			this.resizeShape();
+			//this.resizeShape();
 		}
 
 		this.editImage = function(url){
@@ -585,10 +625,16 @@
 					newImage.crossOrigin = "Anonymous";
 				newImage.src = url;
 			}else{
+				var width = 500;
+				var height = 500;
+				if (this.hasOwnProperty('shapeKO')){
+					width = this.rect.width;
+					height = this.rect.height; //TODO: Change to image height? and save image height?
+				}
 				var image = new Image();
 				if(url.substr(0, 5) !== 'data:')
 					image.crossOrigin = "Anonymous";
-				image.src = url;
+				image.src = url || this.image.setPreviewImage(width, height);
 				this.image.ko.setImage(image);
 				canvas.mainLayer.batchDraw();
 				this.resizeShape();
@@ -751,15 +797,15 @@
 								if(shapeHeight <= shapeWidth - 2*this.padding){
 									var oldHeight = mNode.getHeight();
 									mNode.setHeight(shapeHeight+diffY);
-									mNode.setOffsetY(mNode.getHeight()/2);
+									mNode.setOffsetY(mNode.getHeight());
 									mNode.setWidth(mNode.getWidth() * (mNode.getHeight()/oldHeight));
-									mNode.setOffsetX(mNode.getWidth()/2);							
+									mNode.setOffsetX(mNode.getWidth());							
 								}else{
 									var oldWidth = mNode.getWidth();
 									mNode.setWidth(shapeWidth+diffX - 2*this.padding);
-									mNode.setOffsetX(mNode.getWidth()/2);
+									mNode.setOffsetX(mNode.getWidth());
 									mNode.setHeight(mNode.getHeight() * (mNode.getWidth()/oldWidth));
-									mNode.setOffsetY(mNode.getHeight()/2);							
+									mNode.setOffsetY(mNode.getHeight());							
 								}
 							}else if(this.image.mode === 'scaleAspectFill'){
 								if(shapeHeight > shapeWidth - 2*this.padding){
@@ -1018,6 +1064,7 @@
 			this.addImage = function(url){
 				this.checkLayer();
 				//this.selectedGroup.image.copyValues(url);
+				url = url || this.selectedGroup.image.setPreviewImage(500,500);
 				this.selectedGroup.editImage(url);
 			}
 			this.addText = function(textOptions){
@@ -1245,15 +1292,42 @@
 
 			this.save=function(group){
 				//go through each node, delete all temporary variables, convert colors to rgba hex and send as a json
-				if(group.hasOwnProperty('shapeKO')){
-					delete group.shapeKO;
-					delete group.ko;
-					delete group.parent;
-					//delete group.minimumSize = {'width': 0, 'height':0};
-					//delete group.margins = {'left': 0, 'right': 0, 'top': 0, 'bottom': 0};
-				}
+
+				var groupClone = jQuery.extend(true, {}, group);
+				groupClone.text = jQuery.extend({}, group.text);
+				groupClone.image = jQuery.extend({}, group.image);
+				this.deleteTemp(groupClone);
+				console.log(JSON.stringify(groupClone));
 			};
 
+			this.deleteTemp = function(groupClone){
+				if(groupClone.hasOwnProperty('shapeKO'))
+					delete groupClone.shapeKO;
+				if(groupClone.hasOwnProperty('ko'))
+					delete groupClone.ko;
+				if(groupClone.hasOwnProperty('parent'))
+					delete groupClone.parent;
+				if(groupClone.hasOwnProperty('minimumSize'))
+					delete groupClone.minimumSize;
+				if(groupClone.hasOwnProperty('margins'))
+					delete groupClone.margins;
+				if(groupClone.hasOwnProperty('text')){
+					if(groupClone.text.hasOwnProperty('ko'))
+						delete groupClone.text.ko;
+				}
+				if(groupClone.hasOwnProperty('image')){
+					if(groupClone.image.hasOwnProperty('ko'))
+						delete groupClone.image.ko;
+				}
+				if (groupClone.hasOwnProperty('subgroups') ) {
+					for(var i = 0; i < groupClone.subgroups.length; i++){
+						groupClone.subgroups[i].text = jQuery.extend({}, groupClone.subgroups[i].text);
+						groupClone.subgroups[i].image = jQuery.extend({}, groupClone.subgroups[i].image);
+						groupClone.subgroups[i] = jQuery.extend({}, groupClone.subgroups[i]);
+						this.deleteTemp(groupClone.subgroups[i]);
+					}
+				}
+			}
 			//takes in an array of groups and renders them into the canvas
 			this.load=function(group){
 				this.addSubgroup(group);
