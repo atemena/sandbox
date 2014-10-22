@@ -6,7 +6,7 @@
 		this.imageId;
 		this.url;
 		this.tint = 'none';
-		this.mode = 'scaleAspectFit';
+		this.mode = 'scaleAspectFill';
 		this.defaultSize;
 		//?this.scale;
 
@@ -88,6 +88,19 @@
 		this.parent;
 		this.minimumSize = {'width': 0, 'height':0};
 		this.margins = {'left': 0, 'right': 0, 'top': 0, 'bottom': 0};
+
+		this.follow = function(){
+			if(canvas.mouseDown){
+				//canvas.mouseOffset.x
+				if(this.parent !== 'root'){
+					console.log(canvas.mousePos.x, canvas.mousePos.y);
+					this.ko.setX(canvas.mousePos.x - canvas.mouseOffset.x ); //- this.ko.getX()
+					this.ko.setY(canvas.mousePos.y - canvas.mouseOffset.y); // - this.ko.getY()
+					canvas.mainLayer.draw();
+				}
+				//this.follow(mouseOffset);
+			}
+		}
 
 		//copys values from another group object
 		this.copyValues = function(group){
@@ -199,7 +212,7 @@
 				'stroke': '#ffffffff',
 				'strokeWidth': 1,
 				'strokeAlpha': 1,
-				'padding': 10,
+				'padding': 30,
 				'resizingMask': 0,
 				'opacity': 1
 			};
@@ -250,31 +263,20 @@
 			return config;
 		}
 
+
 		this.updateRect = function(){
 			this.rect.x = this.ko.x();
 			this.rect.y = this.ko.y();
-			var width;
-			if (this.hasOwnProperty('shapeKO'))
-				width = this.shapeKO.getWidth();
-			if (this.getMainNode()){
-				if (this.getMainNode().getWidth() > width)
-					width = this.getMainNode().getWidth();
+			if (this.hasOwnProperty('shapeKO')){
+				this.rect.width = this.shapeKO.getWidth();
+			}else if (this.getMainNode()){
+				this.rect.width = this.getMainNode().getWidth();
 			}
-			if(!width)
-				width = this.rect.width;
 
-			var height;
-			if (this.hasOwnProperty('shapeKO'))
-				height = this.shapeKO.getHeight();
-			if (this.getMainNode()){
-				if (this.getMainNode().getHeight() > height)
-					height = this.getMainNode().getHeight();
-			}
-			if(!height)
-				height = this.rect.height;
-			if (this.rect.width != width || this.rect.height != height){
-				this.rect.width = width;
-				this.rect.height = height
+			if (this.hasOwnProperty('shapeKO')){
+				this.rect.height = this.shapeKO.getHeight();
+			}else if (this.getMainNode()){
+				this.rect.height = this.getMainNode().getHeight();
 			}
 		};
 
@@ -471,120 +473,156 @@
 
 		this.editShape=function(){
 			//change to be able to create a new object as well
-				var newShape;
-				var self = this;
+			var newShape;
+			var self = this;
 
-				var config = this.groupToConfig();
-				
-				var fillPriority = 'color';
-				if(this.gradient.colors.length>0)
-					fillPriority = 'gradient';
-				if(this.hasOwnProperty('shapeKO'))
-					fillPriority = this.shapeKO.getFillPriority();
+			var config = this.groupToConfig();
+			
+			var fillPriority = 'color';
+			if(this.gradient.colors.length>0)
+				fillPriority = 'gradient';
+			if(this.hasOwnProperty('shapeKO'))
+				fillPriority = this.shapeKO.getFillPriority();
+			if(this.hasOwnProperty('shapeKO')){
+				this.shapeKO.destroy();
+			}
 
-				//this.shapeKO.fillPriority(); //Todo check for gradient fill?
-				
-				if (config.curve>=0){
-					newShape = new Kinetic.Shape(canvas._extendConfig({
-						sceneFunc: function(context){
-							context.beginPath();
-							context.moveTo(config.curve, 0);
-							context.lineTo(config.width-config.curve, 0);
-							context.quadraticCurveTo(config.width, 0, config.width, config.curve);
-							context.lineTo(config.width, config.height-config.curve);
-							context.quadraticCurveTo(config.width, config.height, config.width-config.curve, config.height);
-							context.lineTo(config.curve, config.height);
-							context.quadraticCurveTo(0, config.height, 0, config.height-config.curve);
-							context.lineTo(0, config.curve);
-							context.quadraticCurveTo(0, 0, config.curve,0);
-							context.fillStrokeShape(this); //for fill and stroke
-						},
-						x: 0,
-						y: 0,
-						draggable: false
-					}, config));
-					newShape.setOffsetX(newShape.getWidth()/2);
-					newShape.setOffsetY(newShape.getHeight()/2);
-				}else if (config.curve == -1){
-					newShape = new Kinetic.Ellipse(canvas._extendConfig({
-						radius: {x: config.width/2, y:config.height/2},
-						x: 0,
-						y: 0,
-						draggable:false								
-					}, config));
+			//this.shapeKO.fillPriority(); //Todo check for gradient fill?
+			
+			if (config.curve>=0){
+				newShape = new Kinetic.Shape(canvas._extendConfig({
+					sceneFunc: function(context){
+						context.beginPath();
+						context.moveTo(config.curve, 0);
+						context.lineTo(config.width-config.curve, 0);
+						context.quadraticCurveTo(config.width, 0, config.width, config.curve);
+						context.lineTo(config.width, config.height-config.curve);
+						context.quadraticCurveTo(config.width, config.height, config.width-config.curve, config.height);
+						context.lineTo(config.curve, config.height);
+						context.quadraticCurveTo(0, config.height, 0, config.height-config.curve);
+						context.lineTo(0, config.curve);
+						context.quadraticCurveTo(0, 0, config.curve,0);
+						context.fillStrokeShape(this); //for fill and stroke
+					},
+					x: 0,
+					y: 0,
+					draggable: false
+				}, config));
+				newShape.setOffsetX(newShape.getWidth()/2);
+				newShape.setOffsetY(newShape.getHeight()/2);
+			}else if (config.curve == -1){
+				newShape = new Kinetic.Ellipse(canvas._extendConfig({
+					radius: {x: config.width/2, y:config.height/2},
+					x: 0,
+					y: 0,
+					draggable:false								
+				}, config));
+			}
+			this.ko.add(newShape);
+			this.shapeKO = newShape;
+			this.shapeKO._useBufferCanvas = function () {
+				return false;
+			};
+			if(this.parent === 'root'){
+				this.shapeKO.setX(canvas.stage.getWidth()/2);
+				this.shapeKO.setY(canvas.stage.getHeight()/2);
+			}else{
+				if(!this.getMainNode() && config.x === 'auto' && config.y === 'auto'){
+					canvas.randomPos(newShape);
+				}else if(config.x === 'auto' && config.y === 'auto'){
+					this.shapeKO.setX(this.getMainNode().getWidth()/2);
+					this.shapeKO.setY(this.getMainNode().getHeight()/2);
 				}
-				this.ko.add(newShape);
+			}
+			if(fillPriority === 'color'){
+				this.shapeFill(config.fill);
+			}else if(fillPriority === 'gradient' || fillPriority === 'linear-gradient' || fillPriority === 'radial-gradient' ){
+				this.shapeGradient(config.gradient);
+			}
+			this.shapeKO.moveToBottom();
+			if(this.getMainNode())
+				this.scaleMainNode();
+			if(this.getMainNode()){
+				var node = this.getMainNode();
+				if(node.hasShadow() && !shape.hasShadow()){
+					newShape.shadowOpacity(node.shadowOpacity());
+					newShape.shadowOffsetX(node.shadowOffsetX());
+					newShape.shadowOffsetY(node.shadowOffsetY());
+					newShape.shadowBlur(node.shadowBlur());
+					newShape.shadowColor(node.shadowColor());
+				}
+				node.shadowOpacity(0);
+			}
+			this.rect.width = config.width;
+			this.rect.height = config.height;
+			console.log(config.width, config.height);
+			this.color = config.fill;
+			this.stroke.color = config.stroke;
+			this.stroke.width = config.strokeWidth;
+			this.stroke.alpha = config.strokeAlpha;
+			this.curve = config.curve;
+			this.shadow = {'horizontalOffset': config.shadowOffsetX, 
+							'verticalOffset': config.shadowOffsetY, 
+							'blur': config.shadowBlur, 
+							'color': config.shadowColor
+							}; 
 
-				var oldWidth = newShape.getWidth();
-				var oldHeight = newShape.getHeight();
-				
-				if(this.hasOwnProperty('shapeKO')){
-					oldWidth = this.shapeKO.getWidth();
-					oldHeight = this.shapeKO.getHeight();
-					this.shapeKO.destroy();
-				}
-				this.shapeKO = newShape;
-				if(this.parent === 'root'){
-					this.shapeKO.setX(canvas.stage.getWidth()/2);
-					this.shapeKO.setY(canvas.stage.getHeight()/2);
-				}else{
-					if(!this.getMainNode() && config.x === 'auto' && config.y === 'auto'){
-						canvas.randomPos(newShape);
-					}else if(config.x === 'auto' && config.y === 'auto'){
-						this.shapeKO.setX(this.getMainNode().getWidth()/2);
-						this.shapeKO.setY(this.getMainNode().getHeight()/2);
-					}
-				}
-				if(fillPriority === 'color'){
-					this.shapeFill(config.fill);
-				}else if(fillPriority === 'gradient' || fillPriority === 'linear-gradient' || fillPriority === 'radial-gradient' ){
-					this.shapeGradient(config.gradient);
-				}
-				this.shapeKO.moveToBottom();
-				this.scaleMainNode(newShape.getWidth()-oldWidth, newShape.getHeight()-oldHeight);
-				if(this.getMainNode()){
-					var node = this.getMainNode();
-					if(node.hasShadow() && !shape.hasShadow()){
-						newShape.shadowOpacity(node.shadowOpacity());
-						newShape.shadowOffsetX(node.shadowOffsetX());
-						newShape.shadowOffsetY(node.shadowOffsetY());
-						newShape.shadowBlur(node.shadowBlur());
-						newShape.shadowColor(node.shadowColor());
-					}
-					node.shadowOpacity(0);
-				}
-				this.rect.width = config.width;
-				this.rect.height = config.height;
-				this.color = config.fill;
-				this.stroke.color = config.stroke;
-				this.stroke.width = config.strokeWidth;
-				this.stroke.alpha = config.strokeAlpha;
-				this.curve = config.curve;
-				this.shadow = {'horizontalOffset': config.shadowOffsetX, 
-								'verticalOffset': config.shadowOffsetY, 
-								'blur': config.shadowBlur, 
-								'color': config.shadowColor
-								}; 
-
-				this.kineticToGroup();
-				this.updateMargins();
-				canvas.relayer(this);
-				canvas.mainLayer.batchDraw();
+			this.kineticToGroup();
+			this.updateMargins();
+			canvas.relayer(this);
+			canvas.mainLayer.batchDraw();
+			canvas.subPixelRender();
 		};
 
 		this.onImageLoad = function(args) {
 			var newImage = args[0];
 			var config = args[1];
+			var url = newImage.src;
+			var imageKO;
+			if(url.slice(-4) === '.svg' || url.substr(0, 26) === 'data:image/svg+xml;base64,') {
+				if(url.substr(0, 26) === 'data:image/svg+xml;base64,')
+					url = atob(url.slice(26));
+				// The image is only required to get width/height of the picture
+				imageKO = new Kinetic.Shape(canvas._extendConfig({
+					drawFunc: function (context) {
+						// Use the specific context, not the global one which doesn't have the drawSvg function
+						context = context._context;
+						context.shadowBlur = 4;
+						context.shadowOffsetY = 6;
+						context.shadowOffsetX = 6;
+						context.shadowColor = "rgba(0,0,0,0.3)";
+						context.drawSvg(url, 0, 0, newImage.width, newImage.height);
+					},
+					x: Math.floor(Math.random() * (325 - 75 + 1)) + 75,
+					y: Math.floor(Math.random() * (225 - 75 + 1)) + 75,
+					offset: {x: newImage.width/2, y: newImage.height/2 },
+					width: newImage.width,
+					height: newImage.height,
+					draggable: true,
+					drawHitFunc: function(context) {
+						context.beginPath();
+						context.moveTo(0, 0);
+						context.lineTo(newImage.width, 0);
+						context.lineTo(newImage.width, newImage.height);
+						context.lineTo(0, newImage.height);
+						context.lineTo(0, 0);
+						context.closePath();
+						context.fillStrokeShape(this);
+					}
+				}, config)); 
 
-			var imageKO = new Kinetic.Image(canvas._extendConfig({
-				image: newImage,
-				x: 0,
-				y: 0,
-				draggable: false,
-			}, config));
-			
-			imageKO.offsetX(newImage.width/2);
-			imageKO.offsetY(newImage.height/2);
+			}else{
+				imageKO = new Kinetic.Image(canvas._extendConfig({
+					image: newImage,
+					x: 0,
+					y: 0,
+					draggable: false,
+				}, config));
+				
+				imageKO.offsetX(newImage.width/2);
+				imageKO.offsetY(newImage.height/2);
+
+			}
 
 			this.ko.add(imageKO);
 			if(this.parent === 'root'){
@@ -606,6 +644,7 @@
 			this.kineticToGroup();
 			canvas.relayer(this);
 			canvas.mainLayer.batchDraw();
+			canvas.subPixelRender();
 			//this.resizeShape();
 		}
 
@@ -637,58 +676,58 @@
 				image.src = url || this.image.setPreviewImage(width, height);
 				this.image.ko.setImage(image);
 				canvas.mainLayer.batchDraw();
-				this.resizeShape();
+				//this.resizeShape();
 			} 
 		};
 
 		this.editText = function(){
-				var self = this;
-				var config = {};
-				
-				var syntaxSwitch = {'content': 'text', 'color': 'fill', 'size': 'fontSize', 'font' : 'fontFamily', 'justification': 'align', 'style': 'style' };
-				_.map(_.pairs(this.text), function(pair){
-					var key = pair[0];
-					var val = pair[1];
-					if(typeof val !== 'object' && key !== 'subgroups'){
-						config[syntaxSwitch[key]] = val;
-					}
-				});
-				config.x = this.rect.width/2 || 'auto';
-				config.y = this.rect.height/2 || 'auto';
-				config.shadowOffsetX = this.shadow.horizontalOffsetX || 0;
-				config.shadowOffsetY = this.shadow.verticalOffsetY || 0;
-				config.shadowBlur = this.shadow.blur || 0;
-				config.shadowColor = this.shadow.color || 0;
-
-				var textKO = new Kinetic.Text(canvas._extendConfig({
-					x: 0,
-					y: 0,
-					textBaseline: 'middle',
-					draggable: false
-				}, config));
-
-				this.ko.add(textKO);
-				textKO.setOffsetX(textKO.getWidth()/2);
-				textKO.setOffsetY(textKO.getHeight()/2);
-				if(this.parent === 'root'){
-					textKO.setX(canvas.stage.getWidth()/2);
-					textKO.setY(canvas.stage.getHeight()/2);
-				}else{
-					if(!this.hasOwnProperty('shapeKO') && config.x === 'auto' && config.y === 'auto'){
-						canvas.randomPos(textKO);
-					}else if(config.x === 'auto' && config.y === 'auto'){
-						textKO.setX(this.selectedGroup.shapeKO.getWidth()/2);
-						textKO.setY(this.selectedGroup.shapeKO.getHeight()/2);
-					}
+			var self = this;
+			var config = {};
+			
+			var syntaxSwitch = {'content': 'text', 'color': 'fill', 'size': 'fontSize', 'font' : 'fontFamily', 'justification': 'align', 'style': 'style' };
+			_.map(_.pairs(this.text), function(pair){
+				var key = pair[0];
+				var val = pair[1];
+				if(typeof val !== 'object' && key !== 'subgroups'){
+					config[syntaxSwitch[key]] = val;
 				}
-				if(this.hasOwnProperty('shapeKO'))
-					textKO.shadowOpacity(0);
-				//this.updateRect();
-				this.text.ko = textKO;
-				this.kineticToGroup();
-				canvas.mainLayer.batchDraw();
-				this.resizeShape();
-			};
+			});
+			config.x = this.rect.width/2 || 'auto';
+			config.y = this.rect.height/2 || 'auto';
+			config.shadowOffsetX = this.shadow.horizontalOffsetX || 0;
+			config.shadowOffsetY = this.shadow.verticalOffsetY || 0;
+			config.shadowBlur = this.shadow.blur || 0;
+			config.shadowColor = this.shadow.color || 0;
+
+			var textKO = new Kinetic.Text(canvas._extendConfig({
+				x: 0,
+				y: 0,
+				textBaseline: 'middle',
+				draggable: false
+			}, config));
+
+			this.ko.add(textKO);
+			textKO.setOffsetX(textKO.getWidth()/2);
+			textKO.setOffsetY(textKO.getHeight()/2);
+			if(this.parent === 'root'){
+				textKO.setX(canvas.stage.getWidth()/2);
+				textKO.setY(canvas.stage.getHeight()/2);
+			}else{
+				if(!this.hasOwnProperty('shapeKO') && config.x === 'auto' && config.y === 'auto'){
+					canvas.randomPos(textKO);
+				}else if(config.x === 'auto' && config.y === 'auto'){
+					textKO.setX(this.selectedGroup.shapeKO.getWidth()/2);
+					textKO.setY(this.selectedGroup.shapeKO.getHeight()/2);
+				}
+			}
+			if(this.hasOwnProperty('shapeKO'))
+				textKO.shadowOpacity(0);
+			//this.updateRect();
+			this.text.ko = textKO;
+			this.kineticToGroup();
+			canvas.mainLayer.batchDraw();
+			this.resizeShape();
+		};
 
 
 		this.rotate = function(rotation){
@@ -738,12 +777,10 @@
 		};
 
 		this.getMainNode=function(group){
-			for(var i = 0; i<this.ko.getChildren().length; i++){
-				if (this.ko.children[i].getClassName() === 'Image' || this.ko.children[i].getClassName() === 'Text'){
-					return this.ko.children[i];
-				}
-			}
-			return false;
+			if(this.text.hasOwnProperty('ko') || this.image.hasOwnProperty('ko'))
+				return this.text.ko || this.image.ko
+			else
+				return false;
 		};
 
 		this.ungroup=function(){
@@ -769,59 +806,53 @@
 			}
 		};	
 
-		this.scaleMainNode = function(diffX, diffY){
+		this.scaleMainNode = function(){
 			if(this.getMainNode()){
 				var mNode = this.getMainNode();
 				if (mNode.getClassName() === 'Image'){
 					if(this.image.hasOwnProperty('mode')){
-						var shapeWidth;
-						var shapeHeight;
+						var shapeW;
+						var shapeH;
 						if(this.hasOwnProperty('shapeKO')){
 							if(this.shapeKO.getClassName() === 'Ellipse'){
 								var degrees = 45;//Math.tan((this.image.ko.getHeight()/2) / (this.image.ko.getHeight()/2));
-								shapeWidth = 2*(this.shapeKO.radiusX()*Math.cos((degrees*Math.PI)/180));
-								shapeHeight = 2*(this.shapeKO.radiusY()*Math.sin((degrees*Math.PI)/180));
+								shapeW = 2*(this.shapeKO.radiusX()*Math.cos((degrees*Math.PI)/180));
+								shapeH = 2*(this.shapeKO.radiusY()*Math.sin((degrees*Math.PI)/180));
 							}else{
-								shapeHeight = this.shapeKO.getHeight();
-								shapeWidth = this.shapeKO.getWidth();
+								shapeH = this.shapeKO.getHeight();
+								shapeW = this.shapeKO.getWidth();
 							}
 							if(this.image.mode === 'center'){
 							}else if(this.image.mode === 'scaleToFill'){
-								mNode.setWidth(shapeWidth+diffX - 2*this.padding);
-								mNode.setHeight(shapeHeight+diffY);
-								mNode.setOffsetX(shapeWidth/2);
-								mNode.setOffsetY(shapeHeight/2);
-								mNode.setX(this.shapeKO.getX()+ this.padding);
-								mNode.setY(this.shapeKO.getY());
+								mNode.setWidth(shapeW - 2*this.padding);
+								mNode.setHeight(shapeH);
 							}else if(this.image.mode === 'scaleAspectFit'){
-								if(shapeHeight <= shapeWidth - 2*this.padding){
+								if(shapeH <= shapeW - 2*this.padding){
 									var oldHeight = mNode.getHeight();
-									mNode.setHeight(shapeHeight+diffY);
-									mNode.setOffsetY(mNode.getHeight());
-									mNode.setWidth(mNode.getWidth() * (mNode.getHeight()/oldHeight));
-									mNode.setOffsetX(mNode.getWidth());							
+									mNode.setHeight(shapeH);
+									mNode.setWidth(mNode.getWidth() * (mNode.getHeight()/oldHeight));						
 								}else{
 									var oldWidth = mNode.getWidth();
-									mNode.setWidth(shapeWidth+diffX - 2*this.padding);
-									mNode.setOffsetX(mNode.getWidth());
-									mNode.setHeight(mNode.getHeight() * (mNode.getWidth()/oldWidth));
-									mNode.setOffsetY(mNode.getHeight());							
+									mNode.setWidth(shapeW - 2*this.padding);
+									mNode.setHeight(mNode.getHeight() * (mNode.getWidth()/oldWidth));					
 								}
 							}else if(this.image.mode === 'scaleAspectFill'){
-								if(shapeHeight > shapeWidth - 2*this.padding){
+								if(shapeH > shapeW - 2*this.padding){
 									var oldHeight = mNode.getHeight();
-									mNode.setHeight(shapeHeight+diffY);
-									mNode.setOffsetY(mNode.getHeight()/2);
-									mNode.setWidth(mNode.getWidth() * (mNode.getHeight()/oldHeight));
-									mNode.setOffsetX(mNode.getWidth()/2);							
+									mNode.setHeight(shapeH);
+									mNode.setWidth(mNode.getHeight() * (mNode.getWidth()/oldHeight));
+									console.log("height is bigger");
 								}else{
 									var oldWidth = mNode.getWidth();
-									mNode.setWidth(shapeWidth+diffX - 2*this.padding);
-									mNode.setOffsetX(mNode.getWidth()/2);
-									mNode.setHeight(mNode.getHeight() * (mNode.getWidth()/oldWidth));
-									mNode.setOffsetY(mNode.getHeight()/2);							
+									mNode.setWidth(shapeW - 2*this.padding);
+									mNode.setHeight(mNode.getWidth() * (mNode.getHeight()/oldWidth));
+									console.log("width is bigger");
 								}
-							}
+							}	
+							mNode.setX(this.shapeKO.getX()+ this.padding);
+							mNode.setY(this.shapeKO.getY());
+							mNode.setOffsetY(mNode.getHeight()/2);
+							mNode.setOffsetX(mNode.getWidth()/2);	
 						}
 					}
 				}else if(mNode.getClassName() === 'Text'){
@@ -837,17 +868,18 @@
 			if(!config)
 				config = {};
 			config.container = container;
+			console.log(container);
 			config.width = width;
 			config.height = height;
 			this.stage = new Kinetic.Stage(config);
 			this.mainLayer = new Kinetic.Layer();
 			this.border = new Kinetic.Rect({
-					x: 0,
-					y: 0,
-					width: this.stage.attrs.width,
-					height: this.stage.attrs.height,
-					stroke: 'black',
-					strokeWidth: 1
+				x: 0,
+				y: 0,
+				width: this.stage.attrs.width,
+				height: this.stage.attrs.height,
+				stroke: 'black',
+				strokeWidth: 1
 			})
 			this.rootGroup;
 			this.mainLayer.add(this.border);
@@ -856,6 +888,33 @@
 			this.selectedGroup;
 			this.secondaryGroups = [];
 			this.autoSize = true;
+			this.mouseDown = false;
+			this.mousePos = {};
+			this.mouseOffset = {};
+
+			this.groupClicked = function(group, mousePos, highestGroupClicked){
+				if(mousePos.x > group.ko.getAbsolutePosition().x && mousePos.x < group.ko.getAbsolutePosition().x + group.rect.width && mousePos.y > group.ko.getAbsolutePosition().y && mousePos.y < group.ko.getAbsolutePosition().y + group.rect.height){
+					canvas.mouseOffset = {'x':mousePos.x - group.ko.getX(), 'y': mousePos.y-group.ko.getY()};
+					if(highestGroupClicked.hasOwnProperty('ko')){
+						if(group.ko.getAbsoluteZIndex() > highestGroupClicked.ko.getAbsoluteZIndex()){
+							highestGroupClicked = group;
+						}
+					}else{
+						highestGroupClicked = group;
+					}
+				}
+				if (group.hasOwnProperty('subgroups') ) {
+					for(var i = 0; i < group.subgroups.length; i++){
+						highestGroupClicked = this.groupClicked(group.subgroups[i], mousePos, highestGroupClicked);
+					}
+				}
+				return highestGroupClicked;
+
+			}
+
+			//var context = $("#"+config.container)[0].childNodes[0].childNodes[0].getContext("2d");
+			//console.log(context);
+			//context.scale(3,1);
 
 			this.rgbaStringToHex = function(rgbaString){
 				var a = rgbaString.split("(")[1].split(")")[0];
@@ -1154,10 +1213,10 @@
 				
 				var changeWidth = true;
 				var changeHeight = true;
-				if(this.hasOwnProperty('rootGroup')){
+				/*if(this.hasOwnProperty('rootGroup')){
 					changeWidth = this.checkForMinWidth(this.rootGroup);
 					changeHeight = this.checkForMinHeight(this.rootGroup);
-				}
+				}*/
 
 				if(newWidth === undefined && this.hasOwnProperty('rootGroup'))
 					newWidth = this.rootGroup.rect.width;
@@ -1281,7 +1340,7 @@
 						}
 					};
 					if(group.getMainNode())
-					 	group.scaleMainNode(diffX, diffY);
+					 	group.scaleMainNode();
 					if (group.hasOwnProperty('subgroups')) {
 						for(var i = 0; i < group.subgroups.length; i++){
 							this.groupScale(group.subgroups[i], diffX, diffY);
@@ -1289,6 +1348,19 @@
 					}
 				}
 			};
+
+			this.scaleWidth = function(group){
+				if(group.getMainNode())
+					 	group.getMainNode().scaleX(3);
+				if(group.hasOwnProperty('shapeKO'))
+					 	group.shapeWidth(group.rect.width*3);
+				if (group.hasOwnProperty('subgroups')) {
+					for(var i = 0; i < group.subgroups.length; i++){
+						this.scaleWidth(group.subgroups[i]);
+					}
+				}
+				canvas.mainLayer.batchDraw();
+			}
 
 			this.save=function(group){
 				//go through each node, delete all temporary variables, convert colors to rgba hex and send as a json
@@ -1364,6 +1436,85 @@
 				};
 			}
 
+			this.subPixelRender = function(){
+				this.stage.setWidth(this.stage.getWidth()*3);
+				var con = $("#"+config.container)[0].childNodes[0].childNodes[0].getContext('2d');
+				con.scale(3,1);
+				this.mainLayer.draw();
+				var id = con.getImageData(0,0,this.stage.getWidth()*3+40,this.stage.getHeight()+40);
+				con.putImageData(id,0,0);
+				this.copyPix_LCD($('#canvasSB')[0].childNodes[0].childNodes[0], $('#destCanvas')[0], 0.34);
+				con.scale(1/3,1);
+				this.stage.setWidth(this.stage.getWidth()/3);
+				this.mainLayer.draw();
+			}
+
+			//$('#canvasSB')[0].childNodes[0].childNodes[0]
+			//$('#destCanvas')[0]
+			this.copyPix_LCD = function( source, dest, w1 ) {
+				// copies a 3:1 image to a 1:1 image, using LCD stripes	
+				// w1 = centre weighting for sampling. e.g. 0.6
+				
+				var sc = source.getContext('2d');
+				var sw = source.width;
+				var sh = source.height;
+				var sp = sc.getImageData(0, 0, sw, sh);
+				
+				var dc = dest.getContext('2d');
+				var dw = dest.width;
+				var dh = dest.height;
+				var dp = dc.getImageData(0, 0, dw, dh);		
+				
+				var readIndex, writeIndex, r, g, b, a, x, y;
+				
+				// sampling weightings. w1 = weight for sub-pixel; w2 = weight for 
+				var w2 = (1-w1) * 0.5;
+				var w21 = w1 + w2;
+				var w211 = w2 + w2 + w1;
+				
+				// copy. we cheat, by ignoring the width edges.
+				// todo: check extents of source reads, e.g. to use 0..dw, and then prevent index error (too slow?)
+				for( y = 0; y < dh; y++ ) {
+				
+					for( x = 1; x < (dw-1); x++ ) {
+					
+						readIndex  = (y * sw + x * 3) * 4;
+						writeIndex = (y * dw + x) * 4;
+						
+						// r
+						dp.data[writeIndex + 0] = Math.round(
+								w1 *   sp.data[ readIndex + 0 ]
+							+	w2 * ( sp.data[ readIndex - 4 ] + sp.data[ readIndex +  4 ] )
+						);
+						
+						// g
+						dp.data[writeIndex + 1] = Math.round(
+								w1 *   sp.data[ readIndex + 5 ]
+							+	w2 * ( sp.data[ readIndex + 1 ] + sp.data[ readIndex +  9 ] )
+						);
+						
+						// b
+						dp.data[writeIndex + 2] = Math.round(
+								w1 *   sp.data[ readIndex + 10 ]
+							+	w2 * ( sp.data[ readIndex + 6 ] + sp.data[ readIndex + 14 ] )
+						);
+						
+						// a
+						dp.data[writeIndex + 3] = Math.round(
+							0.3333 * (
+									w211 *   sp.data[ readIndex + 7 ]
+								+	w21  * ( sp.data[ readIndex + 3 ] + sp.data[ readIndex + 11 ] )
+								+	w2   * ( sp.data[ readIndex - 1 ] + sp.data[ readIndex + 15 ] )
+							)
+						);
+						
+					}
+					
+				}
+				
+				dc.putImageData(dp,0,0);
+			}
+
 		};
 	};
 
@@ -1376,7 +1527,7 @@
 	if(typeof define === "function" && define.amd) {
 		// AMD
 		//"rgbcolor", "canvg"
-		define("sandbox", ["jquery", "kinetic", "p", "underscore"], function($, Kinetic) { return factory($, Kinetic); });
+		define("sandbox", ["jquery", "kinetic", "p", "underscore", "canvg"], function($, Kinetic) { return factory($, Kinetic); });
 	}
 	else {
 		// Global

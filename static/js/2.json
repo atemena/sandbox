@@ -20,7 +20,7 @@ image2 = {
 			"color": "#ffffff",
 			"alpha": 1,
 			"text": {
-				"content": "Hello",
+				"content": "WWwwwwWw",
 				"color": "rgba(0,255,255,1)",
 				"size": 64,
 				"justification": "center"
@@ -96,7 +96,7 @@ image2 = {
 					"alpha":1,
 			"color": "rgba(0,255,0,1)",
 			"text": {
-				"content": "Hello",
+				"content": "WWwwwwWw",
 				"color": "rgba(255,255,255,1)",
 				"size": 64,
 				"justification": "center"
@@ -114,7 +114,7 @@ image2 = {
 			"color": "rgba(0,255,255,1)",
 					"alpha":1,
 			"text": {
-				"content": "Hello",
+				"content": "WWwwwwWw",
 				"color": "rgba(255,255,255,1)",
 				"size": 64,
 				"justification": "center"
@@ -132,7 +132,7 @@ image2 = {
 			"color": "rgba(255,0,0,1)",
 					"alpha":1,
 			"text": {
-				"content": "Hello",
+				"content": "WWwwwwWw",
 				"color": "rgba(255,255,255,1)",
 				"size": 64,
 				"justification": "center"
@@ -150,7 +150,7 @@ image2 = {
 			"color": "rgba(255,0,255,1)",
 					"alpha":1,
 			"text": {
-				"content": "Hello",
+				"content": "WWwwwwWw",
 				"color": "rgba(255,0,255,1)",
 				"size": 64,
 				"justification": "center"
@@ -168,7 +168,7 @@ image2 = {
 			"color": "rgba(255,255,0,1)",
 					"alpha":1,
 			"text": {
-				"content": "Hello",
+				"content": "WWwwwwWw",
 				"color": "rgba(255,0,255,1)",
 				"size": 64,
 				"justification": "center"
@@ -186,9 +186,9 @@ image2 = {
 			"color": "rgba(255,255,255,1)",
 					"alpha":1,
 			"text": {
-				"content": "Hello",
+				"content": "WWwwwwWw",
 				"color": "rgba(0,0,0,1)",
-				"size": 64,
+				"size": 120,
 				"justification": "center"
 			}
 		},
@@ -204,9 +204,9 @@ image2 = {
 			"color": "rgba(0,0,255,1)",
 					"alpha":1,
 			"text": {
-				"content": "Hello",
+				"content": "WWwwwwWw",
 				"color": "rgba(0,255,255,1)",
-				"size": 64,
+				"size": 100,
 				"justification": "center"
 			}
 		},
@@ -222,7 +222,7 @@ image2 = {
 					"alpha":1,
 			"color": "rgba(0,255,0,1)",
 			"text": {
-				"content": "Hello",
+				"content": "WWwwwwWw",
 				"color": "rgba(255,255,255,1)",
 				"size": 64,
 				"justification": "center"
@@ -240,7 +240,7 @@ image2 = {
 			"color": "rgba(0,255,255,1)",
 					"alpha":1,
 			"text": {
-				"content": "Hello",
+				"content": "WWwwwwWw",
 				"color": "rgba(255,255,255,1)",
 				"size": 64,
 				"justification": "center"
@@ -258,7 +258,7 @@ image2 = {
 			"color": "rgba(255,0,0,1)",
 					"alpha":1,
 			"text": {
-				"content": "Hello",
+				"content": "WWwwwwWw",
 				"color": "rgba(255,255,255,1)",
 				"size": 64,
 				"justification": "center"
@@ -276,7 +276,7 @@ image2 = {
 			"color": "rgba(255,0,255,1)",
 					"alpha":1,
 			"text": {
-				"content": "Hello",
+				"content": "WWwwwwWw",
 				"color": "rgba(255,0,255,1)",
 				"size": 64,
 				"justification": "center"
@@ -294,7 +294,7 @@ image2 = {
 			"color": "rgba(255,255,0,1)",
 					"alpha":1,
 			"text": {
-				"content": "Hello",
+				"content": "WWwwwwWw",
 				"color": "rgba(255,0,255,1)",
 				"size": 64,
 				"justification": "center"

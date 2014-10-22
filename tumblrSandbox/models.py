@@ -28,3 +28,20 @@ pinned = models.DateTimeField(null=True, blank=True)
 created = models.DateTimeField(auto_now_add=True)
 updated = models.DateTimeField(auto_now=True)
 '''
+
+STATUS_CHOICES = (
+	(0,'unrequested') ,
+	(1,'requested') ,
+	(2,'granted'),
+)
+
+class Image(models.Model):
+		favorites = models.IntegerField()
+		text = models.CharField()
+		link = models.CharField()
+		image_url = models.CharField(unique=true)
+		social_network = models.CharField()
+		username = models.CharField()
+		retweets = models.IntegerField(null=true, blank=true)
+		tags = models.CharField()
+		status = models.CharField(choices=STATUS_CHOICES)

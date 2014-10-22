@@ -1,126 +1,214 @@
 <html>
 	<head>
-		<script type="text/javascript" src="/static/pinterest.js"></script>
-		<script type="text/javascript" src="/static/jquery.js"></script>
+		<script type="text/javascript" src="/static/js/pinterest.js"></script>
+		<script type="text/javascript" src="/static/js/jquery.js"></script>
 		<script src="http://d3lp1msu2r81bx.cloudfront.net/kjs/js/lib/kinetic-v4.6.0.min.js"></script>
 		<link href='http://fonts.googleapis.com/css?family=Hanalei' rel='stylesheet' type='text/css'>
 		<script src="http://crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/hmac-sha1.js"></script>
 		<script src="http://crypto-js.googlecode.com/svn/tags/3.1.2/build/components/enc-base64-min.js"></script>
-		<script type="text/javascript" src="/static/oauth-1.0a-master/oauth-1.0a.js"></script>
+		<script type="text/javascript" src="/static/js/oauth-1.0a.js"></script>
 	</head>
 	<body>
-	<h1> Backgrounds </h1>
-	<img onclick='sendToCanvas(this.src)' src='/static/example.png' width='80px'/>
-	<img onclick='sendToCanvas(this.src)' src='/static/test.jpg' width='80px'/> 
-	<img onclick='sendToCanvas(this.src)' src='/static/background.jpg' width='80px'/> 
-	<h2> Stickers</h2>
-	<img onclick='addSticker(this.src)' src='/static/icon.png' width='80px'/>
-	<img onclick='addSticker(this.src)' src='/static/biggericon.png' width='80px'/> 
-	<img onclick='addSticker(this.src)' src='/static/poster.jpg' width='80px'/> 
-	<img onclick='addSticker(this.src)' src='/static/title.png' width='80px'/>
-	<h2>Add text</h2>
-	Text to add: <textarea type="text" id="textbox_id">hello</textarea><br>
-	<button onclick="addText()"> Add Text</button>
-	<button onClick="saveViaAJAX();" id="save_image"> save </button><br>
-	<input type="text" id="blogurl"></input>
-	<button onclick="postToTumblr()"> Post to Tumblr</button>
-	<div style="font-family: 'Hanalei', cursive;"></div>
+		<script>
+		  window.fbAsyncInit = function() {
+		    FB.init({
+		      appId      : '1471832879750979',
+		      xfbml      : true,
+		      version    : 'v2.1'
+		    });
+		  };
 
-	<a  id="saveimg2Pinterest"><img src="//assets.pinterest.com/images/pidgets/pin_it_button.png" /></a><br/>
-	<div id="kineticCanvas" style="position: relative;">
-		<canvas id="backgroundCanvas" width="800" height="800" style="border:1px solid #000000; position: absolute; left: 200; top: 0; z-index: 0;"></canvas>
-		<canvas id="myCanvas" width="800" height="800" style="border:1px solid #000000; position: absolute; left: 200; top: 0; z-index: 1;"></canvas>
-		<canvas id="endCanvas" width="800" height="800" style="border:1px solid #000000; position: absolute; left: 200; top: 0; z-index: 1;"></canvas>
-	</div>
-</body>
-<script type="text/javascript">
+		  (function(d, s, id){
+		     var js, fjs = d.getElementsByTagName(s)[0];
+		     if (d.getElementById(id)) {return;}
+		     js = d.createElement(s); js.id = id;
+		     js.src = "//connect.facebook.net/en_US/sdk.js";
+		     fjs.parentNode.insertBefore(js, fjs);
+		   }(document, 'script', 'facebook-jssdk'));
 
-	var main_canvas=document.getElementById("myCanvas");
-	var background_canvas=document.getElementById("backgroundCanvas");
-	var final_canvas=document.getElementById("endCanvas");
-	var main_context=main_canvas.getContext("2d");
-	var background_context=background_canvas.getContext("2d");
-	var final_context=final_canvas.getContext("2d");
-	var button = document.getElementById("save_image");
-	var pin_it = document.getElementById("pin_it_button");
-	var imgURL = "";
-	var background = new Image();
+
+		</script>
+
+
+		<script>
+		  // This is called with the results from from FB.getLoginStatus().
+		  function statusChangeCallback(response) {
+		    console.log('statusChangeCallback');
+		    console.log(response);
+		    // The response object is returned with a status field that lets the
+		    // app know the current login status of the person.
+		    // Full docs on the response object can be found in the documentation
+		    // for FB.getLoginStatus().
+		    if (response.status === 'connected') {
+		      // Logged into your app and Facebook.
+		      testAPI();
+		    } else if (response.status === 'not_authorized') {
+		      // The person is logged into Facebook, but not your app.
+		      document.getElementById('status').innerHTML = 'Please log ' +
+		        'into this app.';
+		    } else {
+		      // The person is not logged into Facebook, so we're not sure if
+		      // they are logged into this app or not.
+		      document.getElementById('status').innerHTML = 'Please log ' +
+		        'into Facebook.';
+		    }
+		  }
+
+		  // This function is called when someone finishes with the Login
+		  // Button.  See the onlogin handler attached to it in the sample
+		  // code below.
+		  function checkLoginState() {
+		    FB.getLoginStatus(function(response) {
+		      statusChangeCallback(response);
+		    });
+		  }
+
+		  window.fbAsyncInit = function() {
+		  FB.init({
+		    appId      : '{your-app-id}',
+		    cookie     : true,  // enable cookies to allow the server to access 
+		                        // the session
+		    xfbml      : true,  // parse social plugins on this page
+		    version    : 'v2.1' // use version 2.1
+		  });
+
+		  // Now that we've initialized the JavaScript SDK, we call 
+		  // FB.getLoginStatus().  This function gets the state of the
+		  // person visiting this page and can return one of three states to
+		  // the callback you provide.  They can be:
+		  //
+		  // 1. Logged into your app ('connected')
+		  // 2. Logged into Facebook, but not your app ('not_authorized')
+		  // 3. Not logged into Facebook and can't tell if they are logged into
+		  //    your app or not.
+		  //
+		  // These three cases are handled in the callback function.
+
+		  FB.getLoginStatus(function(response) {
+		    statusChangeCallback(response);
+		  });
+
+		  };
+
+		  // Load the SDK asynchronously
+		  (function(d, s, id) {
+		    var js, fjs = d.getElementsByTagName(s)[0];
+		    if (d.getElementById(id)) return;
+		    js = d.createElement(s); js.id = id;
+		    js.src = "//connect.facebook.net/en_US/sdk.js";
+		    fjs.parentNode.insertBefore(js, fjs);
+		  }(document, 'script', 'facebook-jssdk'));
+
+		  // Here we run a very simple test of the Graph API after login is
+		  // successful.  See statusChangeCallback() for when this call is made.
+		  function testAPI() {
+		    console.log('Welcome!  Fetching your information.... ');
+		    FB.api('/me', function(response) {
+		      console.log('Successful login for: ' + response.name);
+		      document.getElementById('status').innerHTML =
+		        'Thanks for logging in, ' + response.name + '!';
+		    });
+		  }
+		</script>
+		<input type="text" id="search"></input>
+		<button onclick="authenticate('tumblr')"> Post to Tumblr</button>
+		<button onclick="authenticate('twitter')"> Post to Twitter</button>
+		<button onclick="authenticate('instagram')"> Post to Instagram</button>
+		<form action="">
+			<input type="radio" name="media-type" value="images">Image 
+			<input type="radio" name="media-type" value="videos">Video 
+			<input type="radio" name="media-type" value="news">News 
+		</form>
+		<div style="font-family: 'Hanalei', cursive;"></div>
+	</body>
+	<script type="text/javascript">
+
+		var main_canvas=document.getElementById("myCanvas");
+		var background_canvas=document.getElementById("backgroundCanvas");
+		var final_canvas=document.getElementById("endCanvas");
+		var main_context=main_canvas.getContext("2d");
+		var background_context=background_canvas.getContext("2d");
+		var final_context=final_canvas.getContext("2d");
+		var button = document.getElementById("save_image");
+		var pin_it = document.getElementById("pin_it_button");
+		var imgURL = "";
+		var background = new Image();
+			
+		function sendToCanvas(clicked_src) {
+		 background_context.clearRect(0, 0, background_canvas.width, background_canvas.height);
+			background.src = clicked_src;
+			background.onload = function(){
+				var width = background_canvas.width;
+				var height =  this.height * (background_canvas.width/this.width);
+			    background_context.drawImage(background,((background_canvas.width/2)-(width/2)),((background_canvas.height/2)-(height/2)), width, height);
+			}
+		}
+
+
 		
-	function sendToCanvas(clicked_src) {
-	 background_context.clearRect(0, 0, background_canvas.width, background_canvas.height);
-		background.src = clicked_src;
-		background.onload = function(){
-			var width = background_canvas.width;
-			var height =  this.height * (background_canvas.width/this.width);
-		    background_context.drawImage(background,((background_canvas.width/2)-(width/2)),((background_canvas.height/2)-(height/2)), width, height);
+
+		function addSticker(clicked_sticker){
+			var image = new Image();
+			image.src = clicked_sticker;
+			image.onload = function(){
+				main_context.drawImage(image,0,0);
+			}
 		}
-	}
 
-
-	
-
-	function addSticker(clicked_sticker){
-		var image = new Image();
-		image.src = clicked_sticker;
-		image.onload = function(){
-			main_context.drawImage(image,0,0);
+		function addText(){
+			var textToAdd = document.getElementById('textbox_id').value
+			main_context.fillStyle = "blue";
+	  		main_context.font = "bold 16px 'Hanalei'";
+	  		main_context.fillText(textToAdd, 100, 100);
+	  		
 		}
-	}
 
-	function addText(){
-		var textToAdd = document.getElementById('textbox_id').value
-		main_context.fillStyle = "blue";
-  		main_context.font = "bold 16px 'Hanalei'";
-  		main_context.fillText(textToAdd, 100, 100);
-  		
-	}
+		
 
-	
+		function dataURItoBlob(dataURI) {
+		    var binary = atob(dataURI.split(',')[1]);
+		    var array = [];
+		    for(var i = 0; i < binary.length; i++) {
+		        array.push(binary.charCodeAt(i));
+		    }
+		    return new Blob([new Uint8Array(array)], {type: 'image/jpeg'});
+		}
+		
 
-	function dataURItoBlob(dataURI) {
-	    var binary = atob(dataURI.split(',')[1]);
-	    var array = [];
-	    for(var i = 0; i < binary.length; i++) {
-	        array.push(binary.charCodeAt(i));
-	    }
-	    return new Blob([new Uint8Array(array)], {type: 'image/jpeg'});
-	}
-	
+		function saveViaAJAX() {
+			final_context.drawImage(background_canvas, 0, 0);
+			final_context.drawImage(main_canvas, 0, 0);
+			var canvasData = final_canvas.toDataURL();
+			var blob = dataURItoBlob(canvasData);
+		    var postData = "canvasData="+canvasData;
+		    //var myPopup = window.open ("pleasewait.html", '', '');
+		    var dat = new FormData();
+		    var time = new Date().getTime();
+		    var newFilename="sharerootPin"+ time + "jpeg"
+			dat.append("key", "crosspromote/" + newFilename);
+			dat.append("AWSAccessKeyId", "AKIAI3WAYXNHBRKM5DGQ");
+			dat.append("acl", "private");
+			dat.append("Content-Type", "image/jpeg");
+			dat.append("policy", "eyJleHBpcmF0aW9uIjogIjIwMzAtMDEtMDFUMDA6MDA6MDBaIiwgImNvbmRpdGlvbnMiOiBbeyJidWNrZXQiOiAicGlucy5zaGFyZXJvb3QuY28ifSwgWyJzdGFydHMtd2l0aCIsICIka2V5IiwgImNyb3NzcHJvbW90ZS8iXSwgeyJhY2wiOiAicHJpdmF0ZSJ9LCBbInN0YXJ0cy13aXRoIiwgIiRDb250ZW50LVR5cGUiLCAiaW1hZ2UvanBlZyJdLCBbImNvbnRlbnQtbGVuZ3RoLXJhbmdlIiwgMCwgMTA0ODU3Nl1dfQ==");
+			dat.append("signature", "8tjqdQYXst1k4LX+xYQ+Rg+d/J8=");
+			dat.append("file", blob );
 
-	function saveViaAJAX() {
-		final_context.drawImage(background_canvas, 0, 0);
-		final_context.drawImage(main_canvas, 0, 0);
-		var canvasData = final_canvas.toDataURL();
-		var blob = dataURItoBlob(canvasData);
-	    var postData = "canvasData="+canvasData;
-	    //var myPopup = window.open ("pleasewait.html", '', '');
-	    var dat = new FormData();
-	    var time = new Date().getTime();
-	    var newFilename="sharerootPin"+ time + "jpeg"
-		dat.append("key", "crosspromote/" + newFilename);
-		dat.append("AWSAccessKeyId", "AKIAI3WAYXNHBRKM5DGQ");
-		dat.append("acl", "private");
-		dat.append("Content-Type", "image/jpeg");
-		dat.append("policy", "eyJleHBpcmF0aW9uIjogIjIwMzAtMDEtMDFUMDA6MDA6MDBaIiwgImNvbmRpdGlvbnMiOiBbeyJidWNrZXQiOiAicGlucy5zaGFyZXJvb3QuY28ifSwgWyJzdGFydHMtd2l0aCIsICIka2V5IiwgImNyb3NzcHJvbW90ZS8iXSwgeyJhY2wiOiAicHJpdmF0ZSJ9LCBbInN0YXJ0cy13aXRoIiwgIiRDb250ZW50LVR5cGUiLCAiaW1hZ2UvanBlZyJdLCBbImNvbnRlbnQtbGVuZ3RoLXJhbmdlIiwgMCwgMTA0ODU3Nl1dfQ==");
-		dat.append("signature", "8tjqdQYXst1k4LX+xYQ+Rg+d/J8=");
-		dat.append("file", blob );
-
-		$.ajax({
-	        type: "POST",
-	        url: "http://pins.shareroot.co.s3.amazonaws.com/",
-	        data: dat,
-	        cache: false,
-	    	contentType: false,
-	        processData: false
-	    	 }
-	    ).done(function() {
-	    	imgURL="https://s3.amazonaws.com/pins.shareroot.co/crosspromote/"+newFilename
-		});
-	}
-	
-	function postToTumblr(){
-		//request token
-		var popup = window.open("http://127.0.0.1:8000/tumblrSandbox/authen/?blog="+$("#blogurl").val(),'','');
-	}
-</script>
+			$.ajax({
+		        type: "POST",
+		        url: "http://pins.shareroot.co.s3.amazonaws.com/",
+		        data: dat,
+		        cache: false,
+		    	contentType: false,
+		        processData: false
+		    	 }
+		    ).done(function() {
+		    	imgURL="https://s3.amazonaws.com/pins.shareroot.co/crosspromote/"+newFilename
+			});
+		}
+		
+		function authenticate(network){
+			//request token
+			var popup = window.open("http://127.0.0.1:8000/tumblrSandbox/authen/?network="+network+"&mediatype="+$("input:radio[name=media-type]:checked").val()+"&search="+$("#search").val(),'','');
+		}
+	</script>
 </html>

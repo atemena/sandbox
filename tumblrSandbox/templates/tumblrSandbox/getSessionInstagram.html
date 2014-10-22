@@ -1,0 +1,53 @@
+<html>
+	<body>
+		{%for tag in tag_info%}
+		<p> {{tag.name}} Media count: {{tag.media_count}}</p><button onclick="getImages('{{tag.name}}',{{forloop.counter}}); return false;">Get images for this tag</button><br>
+		<p id="{{forloop.counter}}" ></p>
+		{%endfor%}
+	</body>
+	<script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+	<script src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+	<script>
+		function getImages(tagName, idNum){
+			$.get( '/tumblrSandbox/getImagesByTag',{tag: tagName}).done(function( data ) {
+				console.log(data);
+				for(var i=0; i < data.posts.length; i++){
+					var tags = data.posts[i].tags;
+					var link = data.posts[i].link;
+					var likes = data.posts[i].likes;
+					var url = data.posts[i].url;
+					var caption = data.posts[i].caption;
+					var username = data.posts[i].username;
+					var img = $('<img >');
+					img.attr("src", data.posts[i].url).height(150).width(150);
+					$('#'+idNum).append(img);
+					img.wrap($('<a>',{
+					   href: link
+					}));
+
+					var info = $('<p>');
+					info.text('Username: '+username+' Likes: '+likes+' Caption: '+caption+' Tags:')
+					$('#'+idNum).append(info);
+					for(var j=0; j < tags.length;j++){
+						var tag = $('<a>')
+						tag.attr("href", "http://127.0.0.1:8000/tumblrSandbox/authenInstagram/?tag="+tags[j]);
+						$('#'+idNum).append(tag);
+					}
+
+					var comment = $('<button>');
+					comment.attr("onclick", "commentIG('"+tagName+"',"+idNum+" )");
+					comment.html("Comment");
+					$('#'+idNum).append(comment);
+
+				}
+				var next = $('<button>');
+				//next.attr("onclick", getImages(tagName, idNum))
+			});
+		}
+
+		function commentIG(tagName, idNum){
+			$.get( '/tumblrSandbox/commentIG',{tag: tagName, idNum: idNum, text:"yo"}).done(function( data ) {
+			})
+		}
+	</script>
+</html>

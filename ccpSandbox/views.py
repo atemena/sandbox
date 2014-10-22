@@ -5,3 +5,6 @@ def index(request):
 
 def newIndex(request):
 	return render(request, 'ccpSandbox/newIndex.html')
+
+def svgTest(request):
+	return render(request, 'ccpSandbox/svgTest.html')

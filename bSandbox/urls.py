@@ -15,8 +15,8 @@ urlpatterns = patterns('',
 
     # Uncomment the next line to enable the admin:
     url(r'^balancedSandbox/', include('balancedSandbox.urls')),
-    url(r'^admin/', include(admin.site.urls)),
     url(r'^backboneSandbox/', include('backboneSandbox.urls')),
     url(r'^tumblrSandbox/', include('tumblrSandbox.urls')),
     url(r'^ccpSandbox/', include('ccpSandbox.urls')),
+    url(r'^admin/', include(admin.site.urls)),
 ) + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

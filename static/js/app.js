@@ -9,8 +9,8 @@ require.config({
     	}
 	}
 });
-require([ 'sandbox', "kinetic", "bootstrapCP", "bootstrapS", "jqueryKnob", "p", "recentPins", "underscore"],
-function( sandbox, kinetic, bootstrapCP, bootstrapS, jqueryKnob, p, recentPins, _){
+require([ 'sandbox', "kinetic", "bootstrapCP", "bootstrapS", "jqueryKnob", "p", "recentPins", "underscore", "canvg", "rgbcolor"],
+function( sandbox, kinetic, bootstrapCP, bootstrapS, jqueryKnob, p, recentPins, _, canvg, rgbcolor){
 	
 
 	var canvas = null;
@@ -27,7 +27,7 @@ function( sandbox, kinetic, bootstrapCP, bootstrapS, jqueryKnob, p, recentPins, 
 		{name:'Roboto',family:'Roboto:400,700:latin'},
 		{name:'Rosario',family:'Rosario:400,700:latin'},
 		{name:'Pathway Gothic One',family:'Pathway+Gothic+One::latin'}];
-	canvas = new sandbox("canvasSB", 400, 300);
+	canvas = new sandbox("canvasSB", 400, 400);
 	//canvas.setBackgroundBorder('black', 4);
 	window.canvas = canvas;
 	//canvas.scale()
@@ -53,16 +53,16 @@ function( sandbox, kinetic, bootstrapCP, bootstrapS, jqueryKnob, p, recentPins, 
 			orientation: 'horizontal',
 			value: 400
 		}).on('slide', function(ev){
-			canvas.scale(canvas.stage.getWidth(), ev.value);
+			//canvas.scale(canvas.stage.getWidth(), ev.value);
 		}).data('slider');
 
 		var canvasW= $('#width').slider({
 			min: 500,
-			max: 1000,
+			max: 2400,
 			orientation: 'horizontal',
-			value: 800
+			value: 2400
 		}).on('slide', function(ev){
-			canvas.scale(ev.value, canvas.stage.getHeight());
+			//canvas.scale(ev.value, canvas.stage.getHeight());
 		}).data('slider');
 
 		$('#bgColor').colorpicker({format:"rgba"}).on('changeColor', function(ev){
@@ -184,7 +184,7 @@ function( sandbox, kinetic, bootstrapCP, bootstrapS, jqueryKnob, p, recentPins, 
 	$(".shadowApplyAll").click(function() {
 		var shadowOptions = [
 			{'opacity': 0, 'horizontalOffsetX': 0, 'verticalOffsetY': 0},
-			{'opacity': .25, 'horizontalOffsetX': 20, 'verticalOffsetY': 20},
+			{'opacity': .25, 'horizontalOffsetX': 20, 'verticalOffsetY': 20, 'blur': 0},
 			{'opacity': .50, 'horizontalOffsetX': 20, 'verticalOffsetY': 20, 'blur': 3},
 			{'opacity': .75, 'horizontalOffsetX': 20, 'verticalOffsetY': 20, 'blur': 3},
 		];
@@ -242,8 +242,38 @@ function( sandbox, kinetic, bootstrapCP, bootstrapS, jqueryKnob, p, recentPins, 
 	$("#delete").click(function(){
 		canvas.selectedGroup.delete();
 	})
+
+	$('#destCanvas')[0].addEventListener('mousemove', function(evt) {
+        //
+        canvas.mousePos = {'x':evt.x-$('#destCanvas').offset().left+ $(window).scrollLeft(), 'y':evt.y- $('#destCanvas').offset().top+ $(window).scrollTop()};
+        if(canvas.attached && canvas.mouseDown)
+        	canvas.attached.follow();
+        console.log('moving ', canvas.mouseDown);
+        canvas.subPixelRender();
+      }, false);
+
+	$('#destCanvas')[0].addEventListener('mousedown', function(evt) {
+        var group = canvas.groupClicked(canvas.rootGroup, {'x': evt.x-$('#destCanvas').offset().left+ $(window).scrollLeft(), 'y':evt.y- $('#destCanvas').offset().top+ $(window).scrollTop()}, {});
+        console.log(group.rect);
+        console.log(group.ko.getAbsolutePosition());
+        console.log({'x': evt.x-$('#destCanvas').offset().left+ $(window).scrollLeft(), 'y':evt.y- $('#destCanvas').offset().top+ $(window).scrollTop()})
+        canvas.mouseDown = true;
+        if(group){
+        	canvas.attached=group;
+        }
+      }, false);
+
+	$('#destCanvas')[0].addEventListener('mouseup', function(evt){
+		canvas.mouseDown = false;
+	}, false);
 	
 	canvas.loadFonts("fontSelect", fontSelected);
-	//canvas.load(image2);
+	canvas.load(image2);
+	//var con = $('#canvasSB')[0].childNodes[0].childNodes[0].getContext('2d');
+	//var id = con.getImageData(0,0,800,400);
+	//con.scale(3,1);
+	//con.putImageData(id,0,0);
+
+	//canvas.scaleWidth(canvas.rootGroup);
 	
 })

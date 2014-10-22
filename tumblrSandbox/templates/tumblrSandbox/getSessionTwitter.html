@@ -1,0 +1,19 @@
+<html>
+	<body>
+		{%for tweet in tweets%}
+			{{tweet.text}}<br>
+			{{tweet.url}}  <button onclick=mentionUser('{{tweet.id_str}}','{{tweet.screen_name}}'); return false;>Direct Message User</button>
+			<input type=textarea id="mentionUser" value="@{{tweet.screen_name}} Hello, I am a representative of _____, can we use your image?"></input><br><br>
+		{%endfor%} 
+	</body>
+
+	<script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+	<script src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+	<script type="text/javascript">
+		function mentionUser(id, screen_name){
+			$.get( '/tumblrSandbox/mentionUser',{'text': '@andrewthreethou yo'}).done(function( data ) {
+				//confirm message was sent
+			})
+		};
+	</script>
+</html>
